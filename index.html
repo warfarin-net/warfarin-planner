@@ -115,10 +115,20 @@
 
     <script>
         const pills = [5, 3, 2]; // Pill strengths available (mg)
-        const daysName = ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.', 'อา.']; // Thai abbreviations for days of the week
+        const daysName = ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.', 'อา.']; // Thai abbreviations for days of the week (Mon=0, Tue=1, ..., Sun=6)
         const DOSE_MULTIPLIER_LIMIT = 2.5; // Special dose not exceed 2.5 times normal dose
         const ABSOLUTE_MAX_DAILY_DOSE = 15; // Absolute maximum daily dose in mg
         const FLOAT_TOLERANCE = 0.01; // Tolerance for floating point comparisons to avoid precision issues
+
+        /**
+         * Helper function to map JavaScript's Date.getDay() (Sunday=0, Monday=1...)
+         * to the custom daysName array's indexing (Monday=0, Tuesday=1..., Sunday=6).
+         * @param {number} jsDayIndex - The day index returned by Date.getDay().
+         * @returns {number} The corresponding index in the daysName array.
+         */
+        function getThaiDayIndex(jsDayIndex) {
+            return (jsDayIndex === 0) ? 6 : jsDayIndex - 1;
+        }
 
         /**
          * Generates and displays interactive buttons for dose adjustment based on the previous dose.
@@ -216,13 +226,15 @@
             let daysUntilAppointment = 7; // Default to 7 days for weekly calculation
             let isAppointmentCalculation = false;
             const appointmentToggle = document.getElementById('appointmentToggle').checked;
+            let startDate = null; // To store the actual start date object
 
             // If appointment calculation is enabled, get the number of days between appointments
             if (appointmentToggle) {
-                const { daysDiff, isValid } = getAppointmentDays();
+                const { daysDiff, isValid, startDt } = getAppointmentDays();
                 if (isValid) {
                     daysUntilAppointment = daysDiff;
                     isAppointmentCalculation = true;
+                    startDate = startDt; // Store the actual start date
                 } else {
                     // If dates are invalid, display an error and return
                     resultDiv.innerHTML = '<div class="text-red-600 text-center font-bold">กรุณาระบุวันที่เริ่มต้นและวันนัดครั้งถัดไปที่ถูกต้อง</div>';
@@ -394,13 +406,19 @@
                     let wholePillCounts = { 2: 0, 3: 0, 5: 0 }; // Counts for whole pills (e.g., 1 whole 5mg)
 
                     // Aggregate pill counts over the entire period (daysUntilAppointment)
+                    // This loop now correctly maps the day index based on the actual start date
+                    const startJsDayIndex = startDate ? startDate.getDay() : 1; // Default to Monday (JS 1) if no start date (for weekly calc)
+
                     for (let day = 0; day < daysUntilAppointment; day++) {
-                        const currentDayIndex = day % 7; // Cycle through the 7-day pattern
-                        const comboForDay = option.comboWeekly ? option.comboWeekly[currentDayIndex] : option.combo;
+                        // Calculate the actual day of the week for the current day in the loop
+                        const actualDayJsIndex = (startJsDayIndex + day) % 7; // JS day index (0=Sun, 1=Mon, ...)
+                        const currentDayIndexForCombo = getThaiDayIndex(actualDayJsIndex); // Maps to daysName index (Mon=0, Sun=6)
+
+                        const comboForDay = option.comboWeekly ? option.comboWeekly[currentDayIndexForCombo] : option.combo;
                         if (comboForDay) {
                             comboForDay.forEach(p => {
                                 if (p.half) halfPillCounts[p.mg]++;
-                                else wholePillCounts[p.mg] += p.count; // Corrected variable name here
+                                else wholePillCounts[p.mg] += p.count;
                             });
                         }
                     }
@@ -470,10 +488,10 @@
             let borderClass = 'border-gray-300'; // Default border
 
             if (Math.abs(dayDose) < FLOAT_TOLERANCE) { // No dose for the day
-                backgroundClass = 'bg-gray-100';
+                backgroundClass = 'bg-gray-100'; // Light gray background
             } else if (isSpecialDay) { // Special day with a dose
                 backgroundClass = 'bg-white'; // Keep background white
-                borderClass = 'border-red-300 border-2'; // Add light blue border and make it slightly thicker
+                borderClass = 'border-blue-300 border-2'; // Add light blue border and make it slightly thicker
             } else { // Normal day with a dose
                 backgroundClass = 'bg-white';
             }
@@ -481,7 +499,7 @@
             return `<div class="${containerBaseClasses} ${backgroundClass} ${borderClass}">
                         <div class="font-bold text-gray-800 py-1 ${dayColors[idx]}">${daysName[idx]}</div>
                         <div class="p-2 flex-grow flex flex-col">
-                            <div class="text-sm text-gray-500">(${dayDose.toFixed(1)} mg)</div>
+                            <div class="text-sm text-gray-800">(${dayDose.toFixed(1)} mg)</div>
                             <div class="flex-grow flex flex-col justify-center items-center my-2 min-h-[30px]">
                                 <div class="flex justify-center items-center flex-wrap">${visualPills}</div>
                             </div>
@@ -625,14 +643,14 @@
 
         /**
          * Calculates the number of days between the start and end appointment dates.
-         * @returns {{daysDiff: number, isValid: boolean}} An object containing the difference in days and a validity flag.
+         * @returns {{daysDiff: number, isValid: boolean, startDt: Date}} An object containing the difference in days, validity flag, and the start Date object.
          */
         function getAppointmentDays() {
             const startDateInput = document.getElementById('startDate').value;
             const endDateInput = document.getElementById('endDate').value;
             
             if (!startDateInput || !endDateInput) {
-                return { daysDiff: 0, isValid: false };
+                return { daysDiff: 0, isValid: false, startDt: null };
             }
 
             const startDate = new Date(startDateInput);
@@ -644,9 +662,9 @@
             const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)); // Calculate difference in days
 
             if (daysDiff < 0) {
-                return { daysDiff: 0, isValid: false }; // End date cannot be before start date
+                return { daysDiff: 0, isValid: false, startDt: null }; // End date cannot be before start date
             } else {
-                return { daysDiff: daysDiff, isValid: true };
+                return { daysDiff: daysDiff, isValid: true, startDt: startDate };
             }
         }
         
