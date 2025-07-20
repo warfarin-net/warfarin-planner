@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Warfarin Dose Planner</title>
+    <title>Warfarin Dose Planner(Warfarin คิดแป๊ปเดียว !)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -62,6 +62,20 @@
             </div>
         </div>
         
+        <div class="my-4 pt-2">
+            <label class="block text-gray-700 text-sm font-bold mb-2 text-center">รูปแบบวันพิเศษ/หยุดยา</label>
+            <div class="flex justify-center gap-x-4 sm:gap-x-8">
+                <div class="flex items-center">
+                    <input type="radio" id="patternFriSun" name="specialDayPattern" value="fri-sun" class="form-radio h-4 w-4 text-blue-600 accent-orange-500" checked>
+                    <label for="patternFriSun" class="ml-2 text-gray-700">ศุกร์, เสาร์, อาทิตย์ (ค่าเริ่มต้น*)</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="radio" id="patternMonWedFri" name="specialDayPattern" value="mon-wed-fri" class="form-radio h-4 w-4 text-blue-600 accent-orange-500">
+                    <label for="patternMonWedFri" class="ml-2 text-gray-700">กระจายขนาดยา (จันทร์, พุธ, ศุกร์)</label>
+                </div>
+            </div>
+        </div>
+
         <div id="adjustmentTable" class="my-4"></div>
         <div class="flex justify-center">
             <button id="showBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg mb-4 w-full md:w-auto hover:bg-blue-700 transition duration-150 ease-in-out shadow-md flex items-center justify-center">แสดงตัวเลือก</button>
@@ -119,6 +133,8 @@
         const startDateInput = document.getElementById('startDate');
         const endDateInput = document.getElementById('endDate');
         const daysResultDiv = document.getElementById('daysResult');
+        const patternFriSunRadio = document.getElementById('patternFriSun');
+        const patternMonWedFriRadio = document.getElementById('patternMonWedFri');
 
         /**
          * Maps JS Date.getDay() to local day index (Mon=0, Sun=6).
@@ -159,7 +175,6 @@
         function setWeeklyDoseAndSuggest(dose) {
             weeklyDoseInput.value = dose.toFixed(1);
             displayPercentageChange();
-            // Automatically trigger the main calculation after a selection
             showBtn.click();
         }
 
@@ -184,7 +199,6 @@
 
         /**
          * Generates and displays suggestions for Warfarin dosage.
-         * This version uses a more flexible algorithm to find regimens with up to 3 different daily dose levels.
          */
         function generateSuggestions() {
             const weeklyDose = parseFloat(weeklyDoseInput.value);
@@ -198,6 +212,7 @@
             displayPercentageChange();
 
             let { daysUntilAppointment, isAppointmentCalculation, startDate } = getAppointmentInfo();
+            const specialDayPattern = document.querySelector('input[name="specialDayPattern"]:checked').value;
             
             let options = [];
             const seenOptions = new Set();
@@ -207,7 +222,7 @@
             if (dailyDoseTarget >= 0) {
                 const dailyCombos = findComb(dailyDoseTarget, pills, allowHalf, dailyDoseTarget === 0 ? 0 : 1, 4);
                 dailyCombos.forEach(c => {
-                    const actualWeeklyDose = c.reduce((sum, p) => sum + (p.half ? p.mg * 0.5 : p.mg * p.count), 0) * 7;
+                    const actualWeeklyDose = c.reduce((sum, p) => sum + (p.half ? p.mg * 0.5 * p.count : p.mg * p.count), 0) * 7;
                     if (Math.abs(actualWeeklyDose - weeklyDose) < FLOAT_TOLERANCE) {
                         const key = `uniform-${JSON.stringify(c.map(p => `${p.mg}-${p.count}-${p.half}`).sort())}`;
                         if (!seenOptions.has(key)) {
@@ -218,18 +233,42 @@
                 });
             }
 
-            // Case 2: Non-uniform doses (2 or 3 levels: base, special, stop)
-            // To simplify options, only allow variations on Fri, Sat, Sun.
-            // This is done by limiting the total number of special + stop days to 3.
+            // Case 2: Non-uniform doses
             for (let numStopDays = 0; numStopDays <= 3; numStopDays++) {
                 for (let numSpecialDays = 0; numSpecialDays <= (3 - numStopDays); numSpecialDays++) {
                     const normalDaysCount = 7 - numStopDays - numSpecialDays;
-                    // Skip the uniform case (0 stop, 0 special) as it's handled separately
                     if (normalDaysCount === 7) continue;
 
-                    // This logic correctly assigns Sun, Sat, Fri for stop/special days based on counts
-                    const stopDaysIndices = Array.from({ length: numStopDays }, (_, i) => 6 - i);
-                    const specialDaysIndices = Array.from({ length: numSpecialDays }, (_, i) => 6 - numStopDays - i);
+                    let stopDaysIndices = [];
+                    let specialDaysIndices = [];
+
+                    if (specialDayPattern === 'fri-sun') {
+                        stopDaysIndices = Array.from({ length: numStopDays }, (_, i) => 6 - i);
+                        specialDaysIndices = Array.from({ length: numSpecialDays }, (_, i) => 6 - numStopDays - i);
+                    } else { // mon-wed-fri
+                        if (numSpecialDays === 3) { 
+                            specialDaysIndices = [0, 2, 4];
+                        } else if (numSpecialDays === 2) {
+                            specialDaysIndices = [0, 4];
+                            if (numStopDays === 1) {
+                                stopDaysIndices = [2];
+                            }
+                        } else if (numSpecialDays === 1) {
+                            if (numStopDays === 2) {
+                                specialDaysIndices = [2];
+                                stopDaysIndices = [0, 4];
+                            } else if (numStopDays === 1) {
+                                specialDaysIndices = [0];
+                                stopDaysIndices = [2];
+                            } else {
+                                specialDaysIndices = [2];
+                            }
+                        } else {
+                            if (numStopDays === 3) stopDaysIndices = [0, 2, 4];
+                            else if (numStopDays === 2) stopDaysIndices = [0, 4];
+                            else if (numStopDays === 1) stopDaysIndices = [2];
+                        }
+                    }
 
                     for (let baseDose = 0.5; baseDose <= ABSOLUTE_MAX_DAILY_DOSE; baseDose += 0.5) {
                         const normalDayCombos = findComb(baseDose, pills, allowHalf, 1, 4);
@@ -237,12 +276,10 @@
 
                         const remainingDose = weeklyDose - (baseDose * normalDaysCount);
                         
-                        // Subcase 2a: Two-level dose (base + stop)
                         if (numSpecialDays === 0) {
                             if (Math.abs(remainingDose) > FLOAT_TOLERANCE) continue;
                             addNonUniformOption(options, seenOptions, { baseDose, numStopDays, stopDaysIndices, normalDayCombos, weeklyDose });
                         } 
-                        // Subcase 2b: Two-level (base + special) or Three-level (base + special + stop)
                         else {
                             if (remainingDose <= FLOAT_TOLERANCE) continue;
                             const specialDayDoseTarget = +(remainingDose / numSpecialDays).toFixed(2);
@@ -258,7 +295,6 @@
                 }
             }
 
-            // Sort and render options
             sortAndRenderOptions(options, daysUntilAppointment, isAppointmentCalculation, startDate);
         }
 
@@ -280,7 +316,7 @@
                         } else {
                             comboWeekly[i] = nCombo.slice();
                         }
-                        actualWeeklyDose += comboWeekly[i].reduce((sum, p) => sum + (p.half ? p.mg * 0.5 : p.mg * p.count), 0);
+                        actualWeeklyDose += comboWeekly[i].reduce((sum, p) => sum + (p.half ? p.mg * 0.5 * p.count : p.mg * p.count), 0);
                     }
 
                     if (Math.abs(actualWeeklyDose - weeklyDose) < FLOAT_TOLERANCE) {
@@ -290,8 +326,8 @@
                             options.push({
                                 type: 'non-uniform', comboWeekly, weeklyDoseActual: actualWeeklyDose,
                                 baseDose, specialDose: specialDayDoseTarget,
-                                numStopDays, stopDays: stopDaysIndices,
-                                numSpecialDays, specialDays: specialDaysIndices,
+                                numStopDays, stopDays: stopDaysIndices.sort((a,b)=>a-b),
+                                numSpecialDays, specialDays: specialDaysIndices.sort((a,b)=>a-b),
                                 priority: 1
                             });
                         }
@@ -310,33 +346,20 @@
              }
 
             options.sort((a, b) => {
-                // **NEW SORTING LOGIC**
-                // 1. Sort by half-pill complexity (0=best, 1=good, 2+=okay)
                 const aHalfComplexity = getHalfPillComplexity(a);
                 const bHalfComplexity = getHalfPillComplexity(b);
-                if (aHalfComplexity !== bHalfComplexity) {
-                    return aHalfComplexity - bHalfComplexity;
-                }
-
-                // 2. Tie-breaker: Uniform is better than non-uniform
+                if (aHalfComplexity !== bHalfComplexity) return aHalfComplexity - bHalfComplexity;
                 if (a.priority !== b.priority) return a.priority - b.priority;
-                
-                // 3. Tie-breaker: Fewer special/stop days is better
                 const aComplexity = (a.numStopDays || 0) + (a.numSpecialDays || 0);
                 const bComplexity = (b.numStopDays || 0) + (b.numSpecialDays || 0);
                 if (aComplexity !== bComplexity) return aComplexity - bComplexity;
-                
-                // 4. Tie-breaker: Fewer pill colors (strengths) is better
                 const aColors = countPillColors(a);
                 const bColors = countPillColors(b);
                 if (aColors !== bColors) return aColors - bColors;
-                
-                // 5. Tie-breaker: Fewer total pills is better
                 const aTotalPills = countTotalPillObjects(a);
                 const bTotalPills = countTotalPillObjects(b);
                 if (aTotalPills !== bTotalPills) return aTotalPills - bTotalPills;
-
-                return 0; // Should be very rare to get here
+                return 0;
             });
 
             resultDiv.innerHTML = options.slice(0, 30).map((option, index) => {
@@ -350,7 +373,7 @@
         function renderOption(option, index, daysUntilAppointment, isAppointmentCalculation, startDate) {
             let description = '';
             if (option.type === 'uniform') {
-                const dailyDose = option.combo.reduce((sum, p) => sum + (p.half ? p.mg * 0.5 : p.mg * p.count), 0);
+                const dailyDose = option.combo.reduce((sum, p) => sum + (p.half ? p.mg * 0.5 * p.count : p.mg * p.count), 0);
                 description = dailyDose > 0 ? `ทุกวัน วันละ ${dailyDose.toFixed(1)} mg` : 'หยุดยา';
             } else { // non-uniform
                 let parts = [];
@@ -364,7 +387,8 @@
                 description = parts.join(', ');
             }
 
-            const weeklyScheduleHtml = Array(7).fill(0).map((_, j) => {
+            const displayOrder = [6, 0, 1, 2, 3, 4, 5];
+            const weeklyScheduleHtml = displayOrder.map(j => {
                 const combo = option.type === 'uniform' ? option.combo : option.comboWeekly[j];
                 let dayType = 'normal';
                 if (option.type === 'non-uniform') {
@@ -399,10 +423,10 @@
             
             if (combo && combo.length > 0) {
                 combo.forEach(p => {
-                    dayDose += p.half ? p.mg * 0.5 : p.mg * p.count;
+                    dayDose += p.half ? p.mg * 0.5 * p.count : p.mg * p.count;
                     if (p.half) {
-                        visualPills += `<span class="pill pill-${p.mg} pill-half-left"></span>`;
-                        textPillsArr.push(`${p.mg} mg x(ครึ่ง)`);
+                        for (let k = 0; k < p.count; k++) visualPills += `<span class="pill pill-${p.mg} pill-half-left"></span>`;
+                        if (p.count > 0) textPillsArr.push(`${p.mg} mg x(ครึ่ง)`);
                     } else {
                         for (let k = 0; k < p.count; k++) visualPills += `<span class="pill pill-${p.mg}"></span>`;
                         if (p.count > 0) textPillsArr.push(`${p.mg} mg x${p.count}`);
@@ -462,7 +486,6 @@
                 if (pillIndex >= availablePills.length) return;
 
                 const pillMg = availablePills[pillIndex];
-                // Recurse with the current pill
                 currentCombo.push({ mg: pillMg, half: false });
                 findRecursive(currentDose + pillMg, currentCombo, pillIndex);
                 currentCombo.pop();
@@ -472,7 +495,6 @@
                     findRecursive(currentDose + pillMg / 2, currentCombo, pillIndex);
                     currentCombo.pop();
                 }
-                // Recurse without the current pill
                 findRecursive(currentDose, currentCombo, pillIndex + 1);
             }
             
@@ -480,6 +502,12 @@
             
             const seenKeys = new Set();
             return resultCombos.filter(combo => {
+                for (const pill of combo) {
+                    if (pill.half && pill.count > 1) {
+                        return false; 
+                    }
+                }
+
                 const key = JSON.stringify(combo.sort((a,b) => a.mg - b.mg));
                 if (seenKeys.has(key)) return false;
                 seenKeys.add(key);
@@ -500,35 +528,28 @@
             return Object.values(aggregated);
         }
 
-        // --- UTILITY & HELPER FUNCTIONS for sorting and display ---
+        // --- UTILITY & HELPER FUNCTIONS ---
 
-        /**
-         * **NEW**
-         * Calculates the complexity of half-pill usage for an option.
-         * @returns {number} 0 for no halves, 1 for one type of half, 2+ for multiple types.
-         */
         function getHalfPillComplexity(o) {
             const halfPillStrengths = new Set();
             const combosToScan = o.type === 'uniform' ? [o.combo] : (o.comboWeekly || []);
-
             combosToScan.forEach(dayCombo => {
                 if (dayCombo) {
                     dayCombo.forEach(pill => {
-                        if (pill.half) {
-                            halfPillStrengths.add(pill.mg);
-                        }
+                        if (pill.half) halfPillStrengths.add(pill.mg);
                     });
                 }
             });
-
             return halfPillStrengths.size;
         }
+
         function countPillColors(o) {
             const colors = new Set();
             const combosToScan = o.type === 'uniform' ? [o.combo] : (o.comboWeekly || []);
             combosToScan.forEach(day => day && day.forEach(p => (p.count > 0 || p.half) && colors.add(p.mg)));
             return colors.size;
         }
+
         function countTotalPillObjects(o) {
             const dailyPillObjects = (day) => day ? day.reduce((s, p) => s + p.count, 0) : 0;
             if (o.type === 'uniform') return dailyPillObjects(o.combo) * 7;
@@ -596,77 +617,59 @@
             return { daysUntilAppointment, isAppointmentCalculation, startDate };
         }
         
+        /**
+         * Updates the appointment days display and triggers recalculation if needed.
+         */
         function updateAppointmentDaysDisplay() {
             const { daysUntilAppointment, isAppointmentCalculation } = getAppointmentInfo();
             if (isAppointmentCalculation) {
                  daysResultDiv.textContent = `คำนวณสำหรับ ${daysUntilAppointment} วัน`;
-                 daysResultDiv.classList.remove('text-red-600');
             } else {
-                if (appointmentToggle.checked && startDateInput.value && endDateInput.value) {
-                    daysResultDiv.textContent = 'วันนัดต้องอยู่หลังวันที่เริ่มต้น';
-                    daysResultDiv.classList.add('text-red-600');
-                } else {
-                    daysResultDiv.textContent = '';
-                }
+                 daysResultDiv.textContent = '';
+            }
+
+            if (resultDiv.innerHTML.trim() !== '') {
+                generateSuggestions();
             }
         }
 
         // --- EVENT LISTENERS ---
-        document.addEventListener('DOMContentLoaded', () => {
-            function handleDateChange() {
-                updateAppointmentDaysDisplay();
-                if (resultDiv.innerHTML !== '') {
-                    // Re-trigger calculation if results are already shown
-                    generateSuggestions();
+        showBtn.addEventListener('click', generateSuggestions);
+        previousDoseInput.addEventListener('input', generateDoseAdjustmentTable);
+        weeklyDoseInput.addEventListener('input', displayPercentageChange);
+        
+        appointmentToggle.addEventListener('change', () => {
+            if (appointmentToggle.checked) {
+                appointmentFields.classList.remove('hidden');
+                if (!startDateInput.value) {
+                    const today = new Date();
+                    const yyyy = today.getFullYear();
+                    const mm = String(today.getMonth() + 1).padStart(2, '0');
+                    const dd = String(today.getDate()).padStart(2, '0');
+                    startDateInput.value = `${yyyy}-${mm}-${dd}`;
                 }
+            } else {
+                appointmentFields.classList.add('hidden');
             }
-
-            previousDoseInput.addEventListener('input', generateDoseAdjustmentTable);
-            weeklyDoseInput.addEventListener('input', displayPercentageChange);
-            
-            // **IMPROVEMENT**: Add loading state to the main button
-            showBtn.addEventListener('click', () => {
-                const originalBtnText = 'แสดงตัวเลือก';
-                showBtn.disabled = true;
-                showBtn.innerHTML = `
-                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    กำลังคำนวณ...
-                `;
-                resultDiv.innerHTML = ''; // Clear previous results
-
-                // Use setTimeout to allow the UI to update to the loading state before heavy calculation
-                setTimeout(() => {
-                    try {
-                        generateSuggestions();
-                    } catch (error) {
-                        console.error("Error generating suggestions:", error);
-                        resultDiv.innerHTML = '<div class="text-red-600 text-center font-bold">เกิดข้อผิดพลาดในการคำนวณ</div>';
-                    } finally {
-                        // Restore button to original state
-                        showBtn.disabled = false;
-                        showBtn.innerHTML = originalBtnText;
-                    }
-                }, 10); 
-            });
-            
-            appointmentToggle.addEventListener('change', () => {
-                appointmentFields.classList.toggle('hidden', !appointmentToggle.checked);
-                if (appointmentToggle.checked) {
-                    startDateInput.valueAsDate = new Date();
-                }
-                updateAppointmentDaysDisplay();
-                if(resultDiv.innerHTML !== '') {
-                    // Re-trigger calculation if results are already shown
-                    generateSuggestions();
-                }
-            });
-
-            startDateInput.addEventListener('input', handleDateChange);
-            endDateInput.addEventListener('input', handleDateChange);
+            updateAppointmentDaysDisplay();
         });
+
+        startDateInput.addEventListener('change', updateAppointmentDaysDisplay);
+        endDateInput.addEventListener('change', updateAppointmentDaysDisplay);
+        
+        function handlePatternChange() {
+            if (resultDiv.innerHTML.trim() !== '') {
+                generateSuggestions();
+            }
+        }
+
+        patternFriSunRadio.addEventListener('change', handlePatternChange);
+        patternMonWedFriRadio.addEventListener('change', handlePatternChange);
+
+
+        // Initial call
+        generateDoseAdjustmentTable();
+
     </script>
 </body>
 </html>
