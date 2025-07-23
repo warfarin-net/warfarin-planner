@@ -67,11 +67,11 @@
             <div class="flex justify-center gap-x-4 sm:gap-x-8">
                 <div class="flex items-center">
                     <input type="radio" id="patternFriSun" name="specialDayPattern" value="fri-sun" class="form-radio h-4 w-4 text-blue-600 accent-orange-500" checked>
-                    <label for="patternFriSun" class="ml-2 text-gray-700">ศุกร์, เสาร์, อาทิตย์ (ค่าเริ่มต้น*)</label>
+                    <label for="patternFriSun" class="ml-2 text-gray-700">ศุกร์/เสาร์/อาทิตย์ (ค่าเริ่มต้น)</label>
                 </div>
                 <div class="flex items-center">
                     <input type="radio" id="patternMonWedFri" name="specialDayPattern" value="mon-wed-fri" class="form-radio h-4 w-4 text-blue-600 accent-orange-500">
-                    <label for="patternMonWedFri" class="ml-2 text-gray-700">กระจายขนาดยา (จันทร์, พุธ, ศุกร์)</label>
+                    <label for="patternMonWedFri" class="ml-2 text-gray-700">กระจายขนาดยา (จันทร์/พุธ/ศุกร์)</label>
                 </div>
             </div>
         </div>
@@ -80,7 +80,7 @@
         <div class="flex justify-center">
             <button id="showBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg mb-4 w-full md:w-auto hover:bg-blue-700 transition duration-150 ease-in-out shadow-md flex items-center justify-center">แสดงตัวเลือก</button>
         </div>
-        <div id="percentageChange" class="text-center text-2xl my-4" aria-live="polite"></div>
+        <div id="percentageChange" class="text-center my-4" aria-live="polite"></div>
 
         <hr class="my-6 border-gray-300">
         
@@ -103,6 +103,22 @@
             </div>
             <div id="daysResult" class="text-center text-lg font-semibold mb-4 text-gray-700" aria-live="polite"></div>
         </div>
+        
+        <hr class="my-6 border-gray-300">
+
+        <div class="my-4 pt-2">
+            <label class="block text-gray-700 text-sm font-bold mb-2 text-center">การจัดเรียงวัน</label>
+            <div class="flex justify-center gap-x-4 sm:gap-x-8">
+                <div class="flex items-center">
+                    <input type="radio" id="displaySunSat" name="displayOrder" value="sun-sat" class="form-radio h-4 w-4 text-blue-600 accent-orange-500" checked>
+                    <label for="displaySunSat" class="ml-2 text-gray-700">อาทิตย์ - เสาร์ (ค่าเริ่มต้น)</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="radio" id="displayMonSun" name="displayOrder" value="mon-sun" class="form-radio h-4 w-4 text-blue-600 accent-orange-500">
+                    <label for="displayMonSun" class="ml-2 text-gray-700">จันทร์ - อาทิตย์</label>
+                </div>
+            </div>
+        </div>
 
         <div id="result" class="space-y-4 mt-6" aria-live="polite"></div>
 
@@ -113,6 +129,8 @@
     </div>
 
     <script>
+    document.addEventListener('DOMContentLoaded', function() {
+
         // --- CONFIGURATION ---
         const pills = [5, 3, 2];
         const daysName = ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.', 'อา.'];
@@ -135,6 +153,8 @@
         const daysResultDiv = document.getElementById('daysResult');
         const patternFriSunRadio = document.getElementById('patternFriSun');
         const patternMonWedFriRadio = document.getElementById('patternMonWedFri');
+        const displaySunSatRadio = document.getElementById('displaySunSat');
+        const displayMonSunRadio = document.getElementById('displayMonSun');
 
         /**
          * Maps JS Date.getDay() to local day index (Mon=0, Sun=6).
@@ -160,13 +180,20 @@
                 const roundedDose = Math.round(exactDose * 2) / 2;
                 const buttonColor = p < 0 ? 'bg-red-100 hover:bg-red-200 text-red-800' : (p === 0 ? 'bg-blue-100 hover:bg-blue-200 text-blue-800' : 'bg-green-100 hover:bg-green-200 text-green-800');
                 buttonsHtml += `
-                    <button onclick="setWeeklyDoseAndSuggest(${roundedDose})" class="p-2 rounded-lg ${buttonColor} transition duration-150 ease-in-out shadow-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <button data-dose="${roundedDose}" class="dose-adjust-btn p-2 rounded-lg ${buttonColor} transition duration-150 ease-in-out shadow-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         <div class="font-bold text-lg">${p > 0 ? '+' : ''}${p}%</div>
                         <div class="text-sm">${roundedDose.toFixed(1)} mg</div>
                     </button>`;
             });
             buttonsHtml += '</div>';
-            adjustmentTableDiv.innerHTML += buttonsHtml;
+            adjustmentTableDiv.innerHTML = buttonsHtml;
+
+            adjustmentTableDiv.querySelectorAll('.dose-adjust-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const dose = parseFloat(this.dataset.dose);
+                    setWeeklyDoseAndSuggest(dose);
+                });
+            });
         }
 
         /**
@@ -185,15 +212,39 @@
             const weeklyDose = parseFloat(weeklyDoseInput.value);
             const previousDose = parseFloat(previousDoseInput.value);
             percentageChangeDiv.innerHTML = '';
+
             if (!isNaN(weeklyDose) && !isNaN(previousDose) && previousDose > 0) {
                 const pctChange = ((weeklyDose - previousDose) / previousDose * 100);
-                 if (Math.abs(pctChange) < 0.05) {
-                     percentageChangeDiv.innerHTML = `<div class="mb-2 text-gray-700">คงที่</div><span class="text-gray-800">0.0%</span>`;
-                     return;
-                 }
-                const arrow = pctChange > 0 ? '▲' : '▼';
-                const color = pctChange > 0 ? 'text-green-600' : 'text-red-600';
-                percentageChangeDiv.innerHTML = `<div class="mb-2 text-gray-700">การเปลี่ยนแปลงขนาดยา</div><span class="${color} text-2xl font-bold">${arrow}</span> <span class="text-gray-800">${Math.abs(pctChange).toFixed(1)}%</span>`;
+
+                let content = '';
+                if (Math.abs(pctChange) < 0.05) {
+                    content = `
+                        <div class="p-4 border-2 border-blue-300 bg-blue-50 rounded-lg shadow-md">
+                            <div class="text-lg text-gray-700 mb-1">การเปลี่ยนแปลงขนาดยา</div>
+                            <div class="flex items-center justify-center">
+                                <span class="text-5xl font-bold text-gray-800">คงที่</span>
+                            </div>
+                        </div>`;
+                } else {
+                    const isIncrease = pctChange > 0;
+                    const arrow = isIncrease ? '▲' : '▼';
+                    const absPctChange = Math.abs(pctChange).toFixed(1);
+                    const arrowColor = isIncrease ? 'text-green-600' : 'text-red-600';
+                    const boxClasses = isIncrease 
+                        ? 'border-2 border-green-300 bg-green-50' 
+                        : 'border-2 border-red-300 bg-red-50';
+                    
+                    content = `
+                        <div class="p-4 ${boxClasses} rounded-lg shadow-md">
+                            <div class="text-lg text-gray-700 mb-1">การเปลี่ยนแปลงขนาดยา</div>
+                            <div class="flex items-center justify-center gap-x-2">
+                                <span class="text-5xl font-bold ${arrowColor}">${arrow}</span>
+                                <span class="text-6xl font-bold text-gray-800">${absPctChange}</span>
+                                <span class="text-4xl text-gray-700 self-end mb-1">%</span>
+                            </div>
+                        </div>`;
+                }
+                percentageChangeDiv.innerHTML = content;
             }
         }
 
@@ -387,7 +438,9 @@
                 description = parts.join(', ');
             }
 
-            const displayOrder = [6, 0, 1, 2, 3, 4, 5];
+            const selectedDisplayOrder = document.querySelector('input[name="displayOrder"]:checked').value;
+            const displayOrder = selectedDisplayOrder === 'mon-sun' ? [0, 1, 2, 3, 4, 5, 6] : [6, 0, 1, 2, 3, 4, 5];
+
             const weeklyScheduleHtml = displayOrder.map(j => {
                 const combo = option.type === 'uniform' ? option.combo : option.comboWeekly[j];
                 let dayType = 'normal';
@@ -657,19 +710,20 @@
         startDateInput.addEventListener('change', updateAppointmentDaysDisplay);
         endDateInput.addEventListener('change', updateAppointmentDaysDisplay);
         
-        function handlePatternChange() {
+        function handleOptionChange() {
             if (resultDiv.innerHTML.trim() !== '') {
                 generateSuggestions();
             }
         }
 
-        patternFriSunRadio.addEventListener('change', handlePatternChange);
-        patternMonWedFriRadio.addEventListener('change', handlePatternChange);
-
+        patternFriSunRadio.addEventListener('change', handleOptionChange);
+        patternMonWedFriRadio.addEventListener('change', handleOptionChange);
+        displaySunSatRadio.addEventListener('change', handleOptionChange);
+        displayMonSunRadio.addEventListener('change', handleOptionChange);
 
         // Initial call
         generateDoseAdjustmentTable();
-
+    });
     </script>
 </body>
 </html>
