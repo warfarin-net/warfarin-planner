@@ -14,6 +14,7 @@
         }
         /* Custom pill styling for visual representation */
         .pill { width: 24px; height: 24px; border-radius: 9999px; display: inline-block; margin: 2px; }
+        .pill-1 { background-color: #E5E7EB; border: 1px solid #D1D5DB; } /* Color for 1mg pill */
         .pill-2 { background-color: orange; } /* Color for 2mg pill */
         .pill-3 { background-color: skyblue; } /* Color for 3mg pill */
         .pill-5 { background-color: pink; } /* Color for 5mg pill */
@@ -62,6 +63,38 @@
             </div>
         </div>
         
+        <div class="my-4 pt-2">
+            <label class="block text-gray-700 text-sm font-bold mb-2 text-center">เลือกขนาดยาที่ใช้คำนวณ</label>
+            <div id="pillSelection" class="flex justify-center gap-x-3 sm:gap-x-6 flex-wrap">
+                <div class="flex items-center">
+                    <input type="checkbox" id="pill-1" value="1" class="pill-checkbox form-checkbox h-5 w-5 text-blue-600 accent-orange-500">
+                    <label for="pill-1" class="ml-2 flex items-center gap-x-2 cursor-pointer">
+                        <span class="pill pill-1"></span> 1 mg
+                    </label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="pill-2" value="2" class="pill-checkbox form-checkbox h-5 w-5 text-blue-600 accent-orange-500" checked>
+                    <label for="pill-2" class="ml-2 flex items-center gap-x-2 cursor-pointer">
+                        <span class="pill pill-2"></span> 2 mg
+                    </label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="pill-3" value="3" class="pill-checkbox form-checkbox h-5 w-5 text-blue-600 accent-orange-500" checked>
+                    <label for="pill-3" class="ml-2 flex items-center gap-x-2 cursor-pointer">
+                        <span class="pill pill-3"></span> 3 mg
+                    </label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="pill-5" value="5" class="pill-checkbox form-checkbox h-5 w-5 text-blue-600 accent-orange-500" checked>
+                    <label for="pill-5" class="ml-2 flex items-center gap-x-2 cursor-pointer">
+                        <span class="pill pill-5"></span> 5 mg
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-6 border-gray-300">
+
         <div class="my-4 pt-2">
             <label class="block text-gray-700 text-sm font-bold mb-2 text-center">รูปแบบวันพิเศษ/หยุดยา</label>
             <div class="flex justify-center gap-x-4 sm:gap-x-8">
@@ -132,7 +165,6 @@
     document.addEventListener('DOMContentLoaded', function() {
 
         // --- CONFIGURATION ---
-        const pills = [5, 3, 2];
         const daysName = ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.', 'อา.'];
         const DOSE_MULTIPLIER_LIMIT = 2.5;
         const ABSOLUTE_MAX_DAILY_DOSE = 15;
@@ -155,6 +187,21 @@
         const patternMonWedFriRadio = document.getElementById('patternMonWedFri');
         const displaySunSatRadio = document.getElementById('displaySunSat');
         const displayMonSunRadio = document.getElementById('displayMonSun');
+        const pillCheckboxes = document.querySelectorAll('.pill-checkbox');
+
+        /**
+         * Gets the currently selected pill strengths from the checkboxes.
+         */
+        function getAvailablePills() {
+            const selectedPills = [];
+            pillCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    selectedPills.push(parseInt(checkbox.value));
+                }
+            });
+            // Sort descending to prioritize larger pills in the findComb algorithm
+            return selectedPills.sort((a, b) => b - a);
+        }
 
         /**
          * Maps JS Date.getDay() to local day index (Mon=0, Sun=6).
@@ -254,10 +301,15 @@
         function generateSuggestions() {
             const weeklyDose = parseFloat(weeklyDoseInput.value);
             const allowHalf = allowHalfCheckbox.checked;
+            const availablePills = getAvailablePills();
             resultDiv.innerHTML = '';
 
             if (isNaN(weeklyDose) || weeklyDose < 0) {
                 resultDiv.innerHTML = '<div class="text-red-600 text-center font-bold">กรุณากรอกขนาดยาใหม่ที่ถูกต้อง</div>';
+                return;
+            }
+             if (availablePills.length === 0) {
+                resultDiv.innerHTML = '<div class="text-red-600 text-center font-bold">กรุณาเลือกขนาดยาอย่างน้อย 1 ขนาด</div>';
                 return;
             }
             displayPercentageChange();
@@ -271,7 +323,7 @@
             // Case 1: Uniform dose
             const dailyDoseTarget = weeklyDose / 7;
             if (dailyDoseTarget >= 0) {
-                const dailyCombos = findComb(dailyDoseTarget, pills, allowHalf, dailyDoseTarget === 0 ? 0 : 1, 4);
+                const dailyCombos = findComb(dailyDoseTarget, availablePills, allowHalf, dailyDoseTarget === 0 ? 0 : 1, 4);
                 dailyCombos.forEach(c => {
                     const actualWeeklyDose = c.reduce((sum, p) => sum + (p.half ? p.mg * 0.5 * p.count : p.mg * p.count), 0) * 7;
                     if (Math.abs(actualWeeklyDose - weeklyDose) < FLOAT_TOLERANCE) {
@@ -322,14 +374,14 @@
                     }
 
                     for (let baseDose = 0.5; baseDose <= ABSOLUTE_MAX_DAILY_DOSE; baseDose += 0.5) {
-                        const normalDayCombos = findComb(baseDose, pills, allowHalf, 1, 4);
+                        const normalDayCombos = findComb(baseDose, availablePills, allowHalf, 1, 4);
                         if (normalDayCombos.length === 0) continue;
 
                         const remainingDose = weeklyDose - (baseDose * normalDaysCount);
                         
                         if (numSpecialDays === 0) {
                             if (Math.abs(remainingDose) > FLOAT_TOLERANCE) continue;
-                            addNonUniformOption(options, seenOptions, { baseDose, numStopDays, stopDaysIndices, normalDayCombos, weeklyDose });
+                            addNonUniformOption(options, seenOptions, { baseDose, numStopDays, stopDaysIndices, normalDayCombos, weeklyDose, availablePills });
                         } 
                         else {
                             if (remainingDose <= FLOAT_TOLERANCE) continue;
@@ -337,10 +389,10 @@
                             if (Math.abs(specialDayDoseTarget - baseDose) < FLOAT_TOLERANCE || specialDayDoseTarget <= 0) continue;
                             if (specialDayDoseTarget > ABSOLUTE_MAX_DAILY_DOSE || specialDayDoseTarget > baseDose * DOSE_MULTIPLIER_LIMIT) continue;
                             
-                            const specialDayCombos = findComb(specialDayDoseTarget, pills, allowHalf, 1, 4);
+                            const specialDayCombos = findComb(specialDayDoseTarget, availablePills, allowHalf, 1, 4);
                             if (specialDayCombos.length === 0) continue;
                             
-                            addNonUniformOption(options, seenOptions, { baseDose, numStopDays, stopDaysIndices, numSpecialDays, specialDaysIndices, specialDayDoseTarget, normalDayCombos, specialDayCombos, weeklyDose });
+                            addNonUniformOption(options, seenOptions, { baseDose, numStopDays, stopDaysIndices, numSpecialDays, specialDaysIndices, specialDayDoseTarget, normalDayCombos, specialDayCombos, weeklyDose, availablePills });
                         }
                     }
                 }
@@ -613,8 +665,8 @@
          * Calculates total pills to dispense for an option.
          */
         function calculateTotalPills(option, daysUntilAppointment, startDate) {
-            let halfPillCounts = { 2: 0, 3: 0, 5: 0 };
-            let wholePillCounts = { 2: 0, 3: 0, 5: 0 };
+            let halfPillCounts = { 1: 0, 2: 0, 3: 0, 5: 0 };
+            let wholePillCounts = { 1: 0, 2: 0, 3: 0, 5: 0 };
             const startJsDayIndex = startDate ? startDate.getDay() : 1; 
 
             for (let day = 0; day < daysUntilAppointment; day++) {
@@ -629,7 +681,7 @@
             }
             
             let message = '';
-            [5, 3, 2].forEach(mg => {
+            [5, 3, 2, 1].forEach(mg => {
                 const wholePills = wholePillCounts[mg] + Math.floor(halfPillCounts[mg] / 2);
                 const remainingHalves = halfPillCounts[mg] % 2;
                 const dispensedPills = wholePills + remainingHalves;
@@ -720,6 +772,9 @@
         patternMonWedFriRadio.addEventListener('change', handleOptionChange);
         displaySunSatRadio.addEventListener('change', handleOptionChange);
         displayMonSunRadio.addEventListener('change', handleOptionChange);
+        pillCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', handleOptionChange);
+        });
 
         // Initial call
         generateDoseAdjustmentTable();
