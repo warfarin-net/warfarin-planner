@@ -6,9 +6,9 @@
     <title>Warfarin คิดแป๊ปเดียว !</title>
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="favicon.ico" sizes="any"> <!-- สำหรับเบราว์เซอร์ทั่วไป -->
+    <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="icon" href="favicon.png" type="image/png">
-    <link rel="icon" href="favicon.svg" type="image/svg+xml"> <!-- สำหรับเบราว์เซอร์ที่รองรับ SVG -->
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -53,18 +53,25 @@
 
         <hr class="my-6 border-gray-300">
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div>
-                <label for="previousDoseInput" class="block text-gray-700 text-sm font-bold mb-2">ขนาดยาก่อนหน้า (mg/week)</label>
-                <input type="number" id="previousDoseInput" class="w-full border border-gray-300 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.1" min="0">
+        <div class="max-w-2xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="previousDoseInput" class="block text-gray-700 text-sm font-bold mb-2">ขนาดยาก่อนหน้า (mg/week)</label>
+                    <input type="number" id="previousDoseInput" class="w-full border border-gray-300 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.1" min="0">
+                </div>
+                <div>
+                    <label for="weeklyDoseInput" class="block text-gray-700 text-sm font-bold mb-2">ขนาดยาใหม่ (mg/week)</label>
+                    <input type="number" id="weeklyDoseInput" class="w-full border border-gray-300 px-3 py-2 rounded-lg bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-500" step="0.1" min="0">
+                </div>
             </div>
-            <div>
-                <label for="weeklyDoseInput" class="block text-gray-700 text-sm font-bold mb-2">ขนาดยาใหม่ (mg/week)</label>
-                <input type="number" id="weeklyDoseInput" class="w-full border border-gray-300 px-3 py-2 rounded-lg bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-500" step="0.1" min="0">
-            </div>
-            <div class="flex items-center pt-4 md:pt-7">
-                <input type="checkbox" id="allowHalf" checked class="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 accent-orange-500">
-                <label for="allowHalf" class="ml-2 text-gray-700 text-sm font-bold">ให้ใช้ *ครึ่ง* เม็ด</label>
+            <div class="mb-4 flex justify-center">
+                <div class="flex items-start">
+                    <input type="checkbox" id="allowHalf" checked class="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 accent-orange-500 mt-1 flex-shrink-0 cursor-pointer">
+                    <div class="ml-2 text-left">
+                        <label for="allowHalf" class="text-gray-700 text-sm font-bold cursor-pointer">ใช้ทั้งยา เม็ดเต็ม และ ครึ่ง (1/2) เม็ด ในการคำนวณ</label>
+                        <p class="text-xs text-gray-500 mt-1 leading-tight">(หากต้องการใช้เฉพาะยาเม็ดเต็ม ในการคำนวณเท่านั้น! - กรุณาเอาเครื่องหมาย ✓ ออก)</p>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -160,14 +167,119 @@
 
         <div id="result" class="space-y-4 mt-6" aria-live="polite"></div>
 
-        <div class="text-right text-xs text-gray-400 mt-6 pt-4 border-t border-gray-200">
-            <p>พัฒนาโดย ภก.นราวิชญ์ คำยวง</p>
-            <p>กลุ่มงานเภสัชกรรม โรงพยาบาลอุทัย</p>
+        <div class="mt-8 pt-4 border-t border-gray-200">
+            <!-- เครดิตผู้พัฒนา - มุมขวาล่าง -->
+            <div class="text-right text-xs text-gray-400 mb-6">
+                <p>พัฒนาโดย ภก.นราวิชญ์ คำยวง</p>
+                <p>กลุ่มงานเภสัชกรรม โรงพยาบาลอุทัย</p>
+            </div>
+            
+            <!-- ส่วนแสดงยอดเข้าใช้งาน - กึ่งกลางจอล่างสุด -->
+            <div class="flex justify-center pb-2">
+                <div class="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-4 py-2 rounded-full border border-blue-100 shadow-sm">
+                    <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    <span id="viewCountDisplay" class="font-semibold tracking-wide text-xs">กำลังโหลดสถิติ...</span>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script>
+    <!-- เปลี่ยน script type เป็น module เพื่อใช้งาน Firebase SDK -->
+    <script type="module">
+    // --- IMPORT FIREBASE MODULES ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+    // --- FIREBASE CONFIGURATION ---
+    // ปรับให้รองรับทั้งสภาพแวดล้อม Preview (Canvas) และโฮสต์จริงของคุณ
+    const isCanvas = typeof __firebase_config !== 'undefined';
+    const firebaseConfig = isCanvas ? JSON.parse(__firebase_config) : {
+      apiKey: "AIzaSyAWKp56uNguelQB7OqYo62yDgBEmPvt8mM",
+      authDomain: "warfarin-planner.firebaseapp.com",
+      projectId: "warfarin-planner",
+      storageBucket: "warfarin-planner.firebasestorage.app",
+      messagingSenderId: "878147766050",
+      appId: "1:878147766050:web:8b1eeae90e698c8605c77b",
+      measurementId: "G-YCKWZRCT5Q"
+    };
+
     document.addEventListener('DOMContentLoaded', function() {
+
+        // --- FIREBASE INITIALIZATION & VIEW COUNTER LOGIC ---
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'warfarin-app';
+        
+        const viewCountDisplay = document.getElementById('viewCountDisplay');
+        
+        // กำหนด Path ที่ถูกต้องสำหรับแต่ละสภาพแวดล้อม
+        const statDocRef = isCanvas
+            ? doc(db, 'artifacts', appId, 'public', 'data', 'statistics', 'page_views')
+            : doc(db, 'statistics', 'page_views');
+
+        async function initViewCounter() {
+            try {
+                // 1. เข้าสู่ระบบแบบไม่ระบุตัวตน 
+                if (isCanvas && typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // 2. ดึงข้อมูลและสร้าง Real-time Listener อัปเดตยอดวิวบนหน้าจอ
+                onSnapshot(statDocRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        viewCountDisplay.textContent = `ยอดการเข้าใช้งานสะสม ${data.count.toLocaleString()} ครั้ง`;
+                    } else {
+                        viewCountDisplay.textContent = `ยอดการเข้าใช้งานสะสม 0 ครั้ง`;
+                    }
+                }, (error) => {
+                    console.error("Error listening to view count:", error);
+                    viewCountDisplay.textContent = `เปิดใช้งานออฟไลน์`;
+                });
+
+                // 3. ตรวจสอบ Session Storage เพื่อป้องกันการปั๊มยอดวิวจากการ Refresh
+                if (!sessionStorage.getItem('warfarin_session_active')) {
+                    const docSnap = await getDoc(statDocRef);
+                    if (docSnap.exists()) {
+                        // หากมี Document อยู่แล้ว ให้ +1
+                        await updateDoc(statDocRef, {
+                            count: increment(1)
+                        });
+                    } else {
+                        // หากยังไม่มี (เปิดครั้งแรกสุดของระบบ) ให้สร้างใหม่และเซ็ตค่าเป็น 1
+                        await setDoc(statDocRef, {
+                            count: 1
+                        });
+                    }
+                    // บันทึก Session ว่าได้ทำการนับวิวในรอบนี้ไปแล้ว
+                    sessionStorage.setItem('warfarin_session_active', 'true');
+                }
+            } catch (error) {
+                console.error("Firebase setup error:", error);
+                
+                // ตรวจจับ Error และแสดงข้อความที่ชัดเจน
+                if (error.code === 'auth/configuration-not-found') {
+                    viewCountDisplay.textContent = `โปรดเปิดใช้งาน Anonymous Auth`;
+                    viewCountDisplay.classList.add('text-red-500');
+                } else if (error.code === 'auth/unauthorized-domain') {
+                    viewCountDisplay.textContent = `โดเมนไม่ได้รับอนุญาตใน Firebase`;
+                    viewCountDisplay.classList.add('text-red-500');
+                } else {
+                    viewCountDisplay.textContent = `พร้อมใช้งาน (ไม่เชื่อมต่อสถิติ)`;
+                }
+            }
+        }
+
+        // เริ่มต้นการทำงานของ View Counter
+        initViewCounter();
+
 
         // --- CONFIGURATION ---
         const daysName = ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.', 'อา.'];
