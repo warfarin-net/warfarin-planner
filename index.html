@@ -26,7 +26,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
 
     <style>
-        body { font-family: 'Prompt', sans-serif; background-color: #f3f4f6; }
+        body { font-family: 'Prompt', sans-serif; }
         
         /* Custom pill styling */
         .pill { 
@@ -48,6 +48,10 @@
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
 
+        /* Styles for Floating Appointed Day Calculator */
+        .calc-modal { transition: opacity 0.2s ease, transform 0.2s ease; font-family: 'Google Sans', 'Prompt', sans-serif;}
+        body.calc-modal-active { overflow: hidden; }
+        
         /* Animations for Appointed Day Calc */
         @keyframes fade-blink {
             0%, 100% { opacity: 0; transform: scale(0.9); }
@@ -66,20 +70,17 @@
             100% { box-shadow: 0 0 0 2px #1E293B; }
         }
         .active-ring-pulse { animation: ring-pulse 1.5s infinite; border-color: #1E293B !important; background-color: #F8FAFC !important; }
-        
-        /* Flatpickr Customization */
         .flatpickr-calendar { font-family: 'Prompt', sans-serif !important; box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important; border: 1px solid #e5e7eb !important; z-index: 99999 !important; }
         .flatpickr-day.selected { background: #3C79F5 !important; border-color: #3C79F5 !important; }
         
-        /* Modal classes for clear history */
-        .history-modal { transition: opacity 0.2s ease, transform 0.2s ease; }
-        body.history-modal-active { overflow: hidden; }
+        /* Z-index management */
+        .calc-modal-container { z-index: 10000; }
+        .calc-modal-overlay { z-index: 9999; }
     </style>
 </head>
-<body class="p-4 sm:p-6 flex flex-col min-h-screen">
-
-    <!-- MAIN WARFARIN CALCULATOR VIEW -->
-    <div id="mainAppView" class="max-w-5xl mx-auto w-full bg-white p-6 rounded-2xl shadow-lg relative z-10 flex-grow">
+<body class="bg-gray-100 p-4 sm:p-6">
+    <!-- MAIN WARFARIN CALCULATOR -->
+    <div id="mainAppView" class="max-w-5xl mx-auto bg-white p-6 rounded-2xl shadow-lg relative z-10">
         <div class="absolute top-6 right-6 no-print">
             <span class="bg-blue-100 text-blue-700 text-xs font-semibold px-2.5 py-1 rounded-full">Warfarin คิดแป๊ปเดียว !</span>
         </div>
@@ -95,7 +96,62 @@
 
         <hr class="my-6 border-gray-300 no-print">
 
-        <!-- Input Section -->
+        <!-- ระบบประเมินและแนะนำการปรับยาตามค่า INR -->
+        <div class="max-w-xl mx-auto mb-6 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden no-print">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 sm:p-4 text-white flex items-center justify-center gap-2.5 shadow-inner">
+                <div class="bg-white/20 p-1.5 sm:p-2 rounded-lg backdrop-blur text-white">
+                    <i class="fas fa-stethoscope text-lg"></i>
+                </div>
+                <h3 class="text-base sm:text-lg font-bold tracking-wide">ประเมินและแนะนำการปรับยาตามค่า INR</h3>
+            </div>
+            
+            <div class="p-4 sm:p-5 bg-slate-50/50 relative overflow-hidden">
+                <!-- Background decor -->
+                <i class="fas fa-heartbeat absolute -right-4 -bottom-4 text-8xl text-blue-50 transform -rotate-12 pointer-events-none z-0"></i>
+
+                <div class="relative z-10">
+                    <!-- Target Selection -->
+                    <div class="mb-5">
+                        <label class="block text-gray-700 text-xs sm:text-sm font-bold mb-2.5 text-center">เลือกเป้าหมาย (Target INR)</label>
+                        <div class="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3">
+                            <label class="relative flex-1 cursor-pointer group">
+                                <input type="radio" name="targetInr" value="2-3" class="peer sr-only" checked>
+                                <div class="px-2 py-2 sm:px-3 sm:py-2.5 rounded-lg border-2 border-gray-200 text-gray-500 font-bold text-center text-xs sm:text-sm transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:bg-gray-50 peer-checked:shadow-sm">
+                                    Target 2.0 - 3.0
+                                </div>
+                            </label>
+                            <label class="relative flex-1 cursor-pointer group">
+                                <input type="radio" name="targetInr" value="2.5-3.5" class="peer sr-only">
+                                <div class="px-2 py-2 sm:px-3 sm:py-2.5 rounded-lg border-2 border-gray-200 text-gray-500 font-bold text-center text-xs sm:text-sm transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:bg-gray-50 peer-checked:shadow-sm">
+                                    Target 2.5 - 3.5
+                                </div>
+                            </label>
+                            <label class="relative flex-1 cursor-pointer group">
+                                <input type="radio" name="targetInr" value="major-bleeding" class="peer sr-only">
+                                <div class="px-2 py-2 sm:px-3 sm:py-2.5 rounded-lg border-2 border-gray-200 text-red-400 font-bold text-center text-xs sm:text-sm transition-all duration-200 peer-checked:border-red-500 peer-checked:bg-red-50 peer-checked:text-red-700 hover:bg-red-50 peer-checked:shadow-sm flex items-center justify-center gap-1.5">
+                                    <i class="fas fa-tint"></i> Major bleeding
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Current INR Input -->
+                    <div id="currentInrContainer" class="mb-2 flex flex-col items-center transition-all duration-300">
+                        <label for="currentInrInput" class="block text-gray-700 text-xs sm:text-sm font-bold mb-2">ระบุค่า INR ปัจจุบันของคุณ</label>
+                        <div class="relative w-40 sm:w-44">
+                            <input type="number" id="currentInrInput" class="w-full text-center text-2xl sm:text-3xl font-black text-blue-700 border-2 border-blue-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 bg-white px-3 py-2 rounded-xl outline-none transition-all shadow-sm" step="0.1" min="0" placeholder="0.0">
+                        </div>
+                    </div>
+
+                    <!-- กล่องแสดงคำแนะนำ (Pop-up style) -->
+                    <div id="inrRecommendationBox" class="hidden mt-5 rounded-xl border-2 shadow-sm animate-fade-in transition-all transform scale-100 relative z-10 overflow-hidden">
+                        <!-- Content will be injected via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="max-w-2xl mx-auto no-print">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
@@ -123,19 +179,27 @@
             <div id="pillSelection" class="flex justify-center gap-x-3 sm:gap-x-6 flex-wrap">
                 <div class="flex items-center">
                     <input type="checkbox" id="pill-1" value="1" class="pill-checkbox form-checkbox h-5 w-5 text-blue-600 accent-orange-500">
-                    <label for="pill-1" class="ml-2 flex items-center gap-x-2 cursor-pointer"><span class="pill pill-1"></span> 1 mg</label>
+                    <label for="pill-1" class="ml-2 flex items-center gap-x-2 cursor-pointer">
+                        <span class="pill pill-1"></span> 1 mg
+                    </label>
                 </div>
                 <div class="flex items-center">
                     <input type="checkbox" id="pill-2" value="2" class="pill-checkbox form-checkbox h-5 w-5 text-blue-600 accent-orange-500" checked>
-                    <label for="pill-2" class="ml-2 flex items-center gap-x-2 cursor-pointer"><span class="pill pill-2"></span> 2 mg</label>
+                    <label for="pill-2" class="ml-2 flex items-center gap-x-2 cursor-pointer">
+                        <span class="pill pill-2"></span> 2 mg
+                    </label>
                 </div>
                 <div class="flex items-center">
                     <input type="checkbox" id="pill-3" value="3" class="pill-checkbox form-checkbox h-5 w-5 text-blue-600 accent-orange-500" checked>
-                    <label for="pill-3" class="ml-2 flex items-center gap-x-2 cursor-pointer"><span class="pill pill-3"></span> 3 mg</label>
+                    <label for="pill-3" class="ml-2 flex items-center gap-x-2 cursor-pointer">
+                        <span class="pill pill-3"></span> 3 mg
+                    </label>
                 </div>
                 <div class="flex items-center">
                     <input type="checkbox" id="pill-5" value="5" class="pill-checkbox form-checkbox h-5 w-5 text-blue-600 accent-orange-500" checked>
-                    <label for="pill-5" class="ml-2 flex items-center gap-x-2 cursor-pointer"><span class="pill pill-5"></span> 5 mg</label>
+                    <label for="pill-5" class="ml-2 flex items-center gap-x-2 cursor-pointer">
+                        <span class="pill pill-5"></span> 5 mg
+                    </label>
                 </div>
             </div>
         </div>
@@ -157,16 +221,13 @@
         </div>
 
         <div id="adjustmentTable" class="my-4 no-print"></div>
-        
         <div class="flex justify-center no-print">
             <button id="showBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg mb-4 w-full md:w-auto hover:bg-blue-700 transition duration-150 ease-in-out shadow-md flex items-center justify-center">แสดงตัวเลือก</button>
         </div>
-        
         <div id="percentageChange" class="text-center my-4 no-print" aria-live="polite"></div>
 
         <hr class="my-6 border-gray-300 no-print">
         
-        <!-- Appointed Day Checkbox for Main Calculator -->
         <div class="flex items-center justify-center no-print">
             <input type="checkbox" id="appointmentToggle" class="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 accent-orange-500">
             <label for="appointmentToggle" class="ml-2 text-gray-800 font-bold">คำนวณจำนวนยาตามนัด</label>
@@ -242,7 +303,7 @@
                 </div>
             </div>
         </div>
-
+        
         <!-- FLOATING BUTTON (Bottom Right - Opens New Window) -->
         <button onclick="openCalcWindow()" title="เครื่องมือคำนวณจำนวนยา" class="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full shadow-2xl text-white flex items-center justify-center hover:scale-110 hover:shadow-blue-500/50 transition-all z-[50] group border-2 border-white no-print">
             <i class="fas fa-calculator text-2xl group-hover:animate-bounce"></i>
@@ -254,73 +315,72 @@
         </button>
     </div>
 
-    <!-- APPOINTED DAY CALCULATOR VIEW (Shown only in mode=calc) -->
-    <div id="calcAppView" style="display: none;" class="max-w-5xl mx-auto w-full bg-slate-100 rounded-2xl shadow-2xl overflow-hidden flex flex-col flex-grow">
-        
+    <!-- FULLSCREEN CALC APPOINTED DAY (Shown only in mode=calc) -->
+    <div id="calcAppView" style="display: none;" class="max-w-5xl mx-auto bg-slate-100 min-h-screen sm:rounded-2xl shadow-2xl flex flex-col relative z-20">
         <!-- Header -->
-        <div class="bg-[#3C79F5] px-4 py-4 flex justify-between items-center shadow-md z-10 shrink-0">
-            <div class="flex items-center gap-3">
-                <div class="bg-white/20 p-2.5 rounded-lg backdrop-blur text-white shadow-inner">
-                    <i class="fas fa-pills text-xl"></i>
+        <div class="bg-[#3C79F5] px-4 py-3 sm:py-4 sm:rounded-t-2xl flex justify-between items-center shadow-md z-10 shrink-0">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="bg-white/20 p-2 sm:p-2.5 rounded-lg backdrop-blur text-white shadow-inner">
+                    <i class="fas fa-pills text-lg sm:text-xl"></i>
                 </div>
                 <div class="flex flex-col">
                     <span class="text-white font-bold text-lg md:text-xl leading-tight">เครื่องมือคำนวณจำนวนยา</span>
-                    <span class="text-blue-100 text-xs font-medium">ตามวันนัดหมาย (Appointed Day)</span>
+                    <span class="text-blue-100 text-[10px] sm:text-xs">ตามวันนัดหมาย (Appointed Day)</span>
                 </div>
             </div>
-            <button onclick="window.close()" class="text-white hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center justify-center transition-colors text-sm font-bold border border-transparent hover:border-white/30">
-                <i class="fas fa-times mr-1.5"></i> ปิด
+            <button onclick="window.close()" class="text-white hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center justify-center transition-colors text-xs sm:text-sm font-bold border border-transparent hover:border-white/30">
+                <i class="fas fa-times mr-1"></i> ปิด
             </button>
         </div>
 
         <!-- Body / Scrollable Area -->
-        <div class="flex-1 overflow-y-auto p-4 sm:p-8 bg-slate-50 custom-scrollbar">
+        <div class="flex-1 overflow-y-auto p-3 sm:p-6 pb-20 custom-scrollbar">
             
             <!-- ERA TOGGLE (สลับ พ.ศ. / ค.ศ.) สำหรับ Popup -->
-            <div class="w-full mx-auto max-w-4xl flex justify-between items-center bg-white rounded-xl shadow-sm p-2 sm:p-3 border border-gray-200 mb-5">
+            <div class="w-full mx-auto max-w-4xl flex justify-between items-center bg-white rounded-xl shadow-sm p-1.5 sm:p-2 border border-gray-200 mb-4 sm:mb-5">
                 <span class="text-xs sm:text-sm font-bold text-gray-700 ml-2 sm:ml-3 flex items-center gap-2"><i class="fas fa-calendar-day text-purple-500"></i> รูปแบบปฏิทิน</span>
-                <div class="flex bg-gray-100 p-1.5 rounded-lg">
-                    <button id="btn-era-be" onclick="setEra(true)" class="px-5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold rounded-md bg-purple-400 text-white shadow-sm transition-all duration-200">พ.ศ.</button>
-                    <button id="btn-era-ce" onclick="setEra(false)" class="px-5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold rounded-md text-gray-500 hover:text-gray-700 transition-all duration-200">ค.ศ.</button>
+                <div class="flex bg-gray-100 p-1 rounded-lg">
+                    <button id="btn-era-be" onclick="setEra(true)" class="px-4 py-1 sm:py-1.5 text-[11px] sm:text-xs font-bold rounded-md bg-purple-400 text-white shadow-sm transition-all duration-200">พ.ศ.</button>
+                    <button id="btn-era-ce" onclick="setEra(false)" class="px-4 py-1 sm:py-1.5 text-[11px] sm:text-xs font-bold rounded-md text-gray-500 hover:text-gray-700 transition-all duration-200">ค.ศ.</button>
                 </div>
             </div>
 
-            <div class="w-full max-w-4xl mx-auto flex flex-col gap-6 animate-fade-in">
-                <div class="bg-white rounded-2xl shadow-md border border-gray-100 relative">
+            <div class="w-full max-w-4xl mx-auto flex flex-col gap-4 sm:gap-6 animate-fade-in">
+                <div class="bg-white rounded-2xl shadow-lg overflow-visible border border-gray-100 relative">
                     
-                    <div class="p-5 sm:p-8 space-y-6">
+                    <div class="p-4 sm:p-6 space-y-4 sm:space-y-6">
                         <!-- Date Selection -->
-                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div class="bg-gray-50 p-3 sm:p-5 rounded-xl border border-gray-100 shadow-sm">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3">
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">วันที่เริ่ม (วันที่ตรวจ)</label>
+                                    <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">วันที่เริ่ม (วันที่ตรวจ)</label>
                                     <input type="text" id="popupStartDate" placeholder="เลือกวันที่เริ่ม" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3C79F5] outline-none bg-white text-center text-sm sm:text-base cursor-pointer font-bold text-gray-700 shadow-inner">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">วันนัดหมาย (เป้าหมาย)</label>
+                                    <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">วันนัดหมาย (เป้าหมาย)</label>
                                     <input type="text" id="popupEndDate" placeholder="เลือกปฏิทิน หรือระบุเวลาด้านล่าง" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3C79F5] outline-none bg-white text-center text-sm sm:text-base cursor-pointer font-bold text-gray-700 shadow-inner">
                                 </div>
                             </div>
                             
                             <!-- Shortcut ระบุระยะเวลา -->
-                            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 bg-blue-50/70 p-3 rounded-lg border border-blue-200 mb-3">
-                                <label class="text-sm font-bold text-blue-800 whitespace-nowrap"><i class="fas fa-forward mr-1"></i> หรือ นัดล่วงหน้า:</label>
-                                <input type="number" id="popupQuickDurationValue" placeholder="ระบุจำนวน" min="1" class="w-36 sm:w-44 p-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-[#3C79F5] outline-none text-center text-sm sm:text-base font-bold text-blue-700 shadow-inner" oninput="applyPopupQuickDuration()">
-                                <select id="popupQuickDurationUnit" class="p-2 border border-blue-300 rounded-md text-sm font-bold bg-white text-gray-700 focus:ring-2 focus:ring-[#3C79F5] outline-none cursor-pointer shadow-sm" onchange="applyPopupQuickDuration()">
+                            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 bg-blue-50/70 p-2.5 sm:p-3 rounded-lg border border-blue-200 mb-3">
+                                <label class="text-xs sm:text-sm font-bold text-blue-800 whitespace-nowrap"><i class="fas fa-forward mr-1"></i> หรือ นัดล่วงหน้า:</label>
+                                <input type="number" id="popupQuickDurationValue" placeholder="ระบุจำนวน (ตัวเลข)" min="1" class="w-36 sm:w-44 p-1.5 border border-blue-300 rounded-md focus:ring-2 focus:ring-[#3C79F5] outline-none text-center text-sm sm:text-base font-bold text-blue-700 shadow-inner" oninput="applyPopupQuickDuration()">
+                                <select id="popupQuickDurationUnit" class="p-1.5 border border-blue-300 rounded-md text-xs sm:text-sm font-bold bg-white text-gray-700 focus:ring-2 focus:ring-[#3C79F5] outline-none cursor-pointer shadow-sm" onchange="applyPopupQuickDuration()">
                                     <option value="days" selected>วัน (Days)</option>
                                     <option value="weeks">สัปดาห์ (Weeks)</option>
                                     <option value="months">เดือน (Months)</option>
                                 </select>
                             </div>
 
-                            <div class="mt-4 flex justify-center items-center gap-2 bg-white p-2 rounded-lg border border-gray-200">
-                                <input type="checkbox" id="includeEndDate" class="w-5 h-5 text-[#3C79F5] rounded focus:ring-[#3C79F5] cursor-pointer" onchange="calculateMeds(); updateDurationPreview();">
-                                <label for="includeEndDate" class="text-sm text-gray-700 cursor-pointer font-bold select-none">รวมปริมาณยาในวันนัดด้วย (บวกเพิ่ม 1 วัน)</label>
+                            <div class="mt-3 flex justify-center items-center gap-2 bg-white p-2 rounded-lg border border-gray-200">
+                                <input type="checkbox" id="includeEndDate" class="w-4 h-4 text-[#3C79F5] rounded focus:ring-[#3C79F5] cursor-pointer" onchange="calculateMeds(); updateDurationPreview();">
+                                <label for="includeEndDate" class="text-xs sm:text-sm text-gray-700 cursor-pointer font-bold select-none">รวมปริมาณยาในวันนัดด้วย (บวก 1 วัน)</label>
                             </div>
                             
-                            <div class="mt-5 pt-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3">
-                                <div id="durationPreview" class="text-lg font-medium text-[#3C79F5] min-h-[1.75rem] flex items-center justify-center gap-2"></div>
-                                <button onclick="resetForward()" class="text-gray-500 hover:text-red-500 flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-lg bg-white shadow-sm border border-gray-200 hover:border-red-200 hover:bg-red-50 transition-all" title="เริ่มใหม่ (Reset)">
+                            <div class="mt-4 pt-3 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3">
+                                <div id="durationPreview" class="text-base sm:text-lg font-medium text-[#3C79F5] min-h-[1.75rem] flex items-center justify-center gap-2"></div>
+                                <button onclick="resetForward()" class="text-gray-500 hover:text-red-500 flex items-center gap-1.5 text-xs sm:text-sm font-bold px-3 py-1.5 rounded-lg bg-white shadow-sm hover:bg-red-50 transition-all border border-gray-200 hover:border-red-200" title="เริ่มใหม่ (Reset)">
                                     <i class="fas fa-redo-alt"></i> ล้างค่าทั้งหมด
                                 </button>
                             </div>
@@ -330,29 +390,29 @@
                         <div>
                             <div class="flex items-center gap-2 mb-3 pl-1">
                                 <div class="bg-amber-100 text-amber-600 p-1.5 rounded text-xs"><i class="fas fa-mouse-pointer"></i></div>
-                                <label class="block text-sm font-semibold text-gray-700">คลิกเลือกวัน แล้วเลือกปริมาณยาจากตัวเลือกด้านล่าง</label>
+                                <label class="block text-xs sm:text-sm font-semibold text-gray-700">คลิกเลือกวัน แล้วเลือกปริมาณยาจากตัวเลือกด้านล่าง</label>
                             </div>
-                            <div id="daysList" class="flex flex-wrap justify-center gap-2 mb-5"></div>
+                            <div id="daysList" class="flex flex-wrap justify-center gap-1.5 sm:gap-2 mb-4"></div>
                             
-                            <div id="sharedOptionsPanel" class="hidden bg-blue-50 border-2 border-blue-200 rounded-xl p-4 sm:p-5 animate-fade-in relative shadow-inner mx-auto max-w-2xl mt-2 z-20">
+                            <div id="sharedOptionsPanel" class="hidden bg-blue-50 border-2 border-blue-200 rounded-xl p-3 sm:p-5 animate-fade-in relative shadow-inner mx-auto max-w-2xl mt-2 z-20">
                                 <div class="flex justify-between items-center mb-3 border-b border-blue-100 pb-2">
-                                    <span class="text-sm font-bold text-gray-800" id="sharedOptionsTitle">เลือกปริมาณยาสำหรับ...</span>
-                                    <button onclick="closeSharedOptions()" class="text-gray-400 hover:text-red-500 bg-white rounded-full w-7 h-7 flex items-center justify-center shadow-sm border border-gray-200 transition-colors"><i class="fas fa-times text-sm"></i></button>
+                                    <span class="text-xs sm:text-sm font-bold text-gray-800" id="sharedOptionsTitle">เลือกปริมาณยาสำหรับ...</span>
+                                    <button onclick="closeSharedOptions()" class="text-gray-400 hover:text-red-500 bg-white rounded-full w-7 h-7 flex items-center justify-center shadow-sm border border-gray-200"><i class="fas fa-times text-xs"></i></button>
                                 </div>
-                                <div class="flex flex-wrap justify-center gap-2" id="sharedOptionsGrid"></div>
+                                <div class="flex flex-wrap justify-center gap-1.5 sm:gap-2" id="sharedOptionsGrid"></div>
                                 
                                 <!-- ส่วนกรอกตัวเลขระบุเอง -->
-                                <div id="customDosageContainer" class="hidden mt-4 p-4 bg-white border border-blue-200 rounded-xl flex-col items-center gap-3 shadow-inner">
-                                    <label class="text-sm font-bold text-gray-700">ระบุจำนวนยาที่ต้องการ:</label>
+                                <div id="customDosageContainer" class="hidden mt-3 p-3 bg-white border border-blue-200 rounded-xl flex-col items-center gap-2 shadow-inner">
+                                    <label class="text-xs font-bold text-gray-700">ระบุจำนวนยาที่ต้องการ:</label>
                                     <div class="flex items-center gap-2">
-                                        <input type="number" id="customDosageInput" step="0.25" min="0.25" placeholder="เช่น 6, 7.5" class="w-32 p-2 border-2 border-blue-300 rounded-lg text-center text-lg font-bold text-gray-700 focus:ring-2 focus:ring-[#3C79F5] outline-none" onkeydown="if(event.key === 'Enter') applyCustomDosage()">
-                                        <button onclick="applyCustomDosage()" class="bg-[#3C79F5] hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-sm transition-all active:scale-95 text-base">ตกลง</button>
+                                        <input type="number" id="customDosageInput" step="0.25" min="0.25" placeholder="เช่น 6, 7.5" class="w-28 p-1.5 border-2 border-blue-300 rounded-lg text-center font-bold text-gray-700 focus:ring-2 focus:ring-[#3C79F5] outline-none" onkeydown="if(event.key === 'Enter') applyCustomDosage()">
+                                        <button onclick="applyCustomDosage()" class="bg-[#3C79F5] hover:bg-blue-600 text-white font-bold py-1.5 px-4 text-sm rounded-lg shadow-sm transition-all active:scale-95">ตกลง</button>
                                     </div>
-                                    <p class="text-xs text-gray-500 text-center leading-tight bg-gray-50 p-2 rounded-lg border border-gray-100">ระบบจะปรับเศษให้ลงตัวกับ 1/4, 1/2, 3/4 อัตโนมัติ (+/- ทีละ 0.25)</p>
+                                    <p class="text-[10px] text-gray-500 text-center leading-tight bg-gray-50 p-1.5 rounded border border-gray-100 mt-1">ระบบจะปรับเศษให้ลงตัวกับ 1/4, 1/2, 3/4 อัตโนมัติ (+/- ทีละ 0.25)</p>
                                 </div>
 
-                                <div id="applyAllContainer" class="mt-4 pt-4 border-t border-blue-200/60 flex justify-center hidden animate-fade-in">
-                                    <button onclick="applyToAllDays()" class="text-sm bg-white border-2 border-[#3C79F5]/40 text-[#3C79F5] hover:bg-[#3C79F5] hover:border-[#3C79F5] hover:text-white font-bold py-2 px-6 rounded-xl flex items-center gap-2 transition-all shadow-sm active:scale-95">
+                                <div id="applyAllContainer" class="mt-3 pt-3 border-t border-blue-200/60 flex justify-center hidden animate-fade-in">
+                                    <button onclick="applyToAllDays()" class="text-xs sm:text-sm bg-white border-2 border-[#3C79F5]/40 text-[#3C79F5] hover:bg-[#3C79F5] hover:border-[#3C79F5] hover:text-white font-bold py-1.5 sm:py-2 px-4 sm:px-6 rounded-xl flex items-center gap-2 transition-all shadow-sm active:scale-95">
                                         <i class="fas fa-copy"></i> นำปริมาณนี้ไปใช้กับทุกวัน (<span id="applyAllValue"></span>)
                                     </button>
                                 </div>
@@ -360,20 +420,20 @@
                         </div>
 
                         <!-- Result Area -->
-                        <div id="resultArea" class="hidden animate-fade-in relative group mt-6">
-                            <div class="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 sm:p-8 text-center shadow-md relative overflow-hidden">
+                        <div id="resultArea" class="hidden animate-fade-in relative group mt-4 sm:mt-6">
+                            <div class="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-5 sm:p-8 text-center shadow-md relative overflow-hidden">
                                 <!-- Background decor -->
                                 <i class="fas fa-capsules absolute -right-4 -bottom-4 text-6xl text-green-500/10 transform rotate-[-20deg]"></i>
                                 
-                                <div id="saveStatus1" class="absolute top-3 right-3 text-green-600 text-xs font-bold opacity-0 flex items-center gap-1.5 pointer-events-none bg-green-100 px-2 py-1 rounded-md shadow-sm">
+                                <div id="saveStatus1" class="absolute top-3 right-3 text-green-600 text-[10px] sm:text-xs font-bold opacity-0 flex items-center gap-1.5 pointer-events-none bg-green-100 px-2 py-1 rounded-md shadow-sm">
                                     <i class="fas fa-save"></i> บันทึกแล้ว
                                 </div>
-                                <p class="text-green-800 font-bold mb-2 text-base">สรุปต้องใช้ยาทั้งหมด</p>
-                                <div class="text-5xl sm:text-6xl font-black text-green-700 mb-4 tracking-tight drop-shadow-sm">
-                                    <span id="totalPills">0</span> <span class="text-xl sm:text-2xl font-bold text-green-600 ml-1">เม็ด/แคปซูล/หน่วยนับอื่น ๆ</span>
+                                <p class="text-green-800 font-bold mb-1 text-sm sm:text-base">สรุปต้องใช้ยาทั้งหมด</p>
+                                <div class="text-4xl sm:text-6xl font-black text-green-700 mb-3 tracking-tight">
+                                    <span id="totalPills">0</span> <span class="text-xl sm:text-2xl font-bold text-green-600 ml-1">เม็ด/แคปซูล/หน่วยอื่น</span>
                                 </div>
-                                <div class="inline-block bg-white px-5 py-2 rounded-full border border-green-200 shadow-sm">
-                                    <p class="text-sm text-gray-700 font-semibold" id="durationText">ระยะเวลา 0 วัน</p>
+                                <div class="inline-block bg-white px-4 py-1.5 rounded-full border border-green-200 shadow-sm">
+                                    <p class="text-xs sm:text-sm text-gray-700 font-semibold" id="durationText">ระยะเวลา 0 วัน</p>
                                 </div>
                             </div>
                         </div>
@@ -381,14 +441,14 @@
                 </div>
 
                 <!-- History Section -->
-                <div class="bg-white rounded-2xl shadow-md overflow-hidden border-t-8 border-gray-600 mb-6">
-                    <div class="bg-gray-800 p-4 sm:p-5 text-white flex justify-between items-center">
-                        <h1 class="text-base sm:text-lg font-bold flex items-center gap-2"><i class="fas fa-history text-blue-400"></i> บันทึกช่วยจำ <span class="text-xs bg-gray-700 px-2 py-1 rounded-md font-normal text-gray-300">10 รายการล่าสุด</span></h1>
-                        <button type="button" onclick="toggleClearHistoryModal()" class="text-xs bg-gray-700 hover:bg-red-500 text-white px-3 py-1.5 rounded-lg transition-colors shadow border border-gray-600 hover:border-red-600 font-semibold flex items-center gap-1.5"><i class="fas fa-trash-alt"></i> ล้างประวัติ</button>
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden border-t-8 border-gray-600 mb-6">
+                    <div class="bg-gray-800 p-3 sm:p-5 text-white flex justify-between items-center">
+                        <h1 class="text-base sm:text-lg font-bold flex items-center gap-2"><i class="fas fa-history text-blue-400"></i> บันทึกช่วยจำ <span class="text-[10px] bg-gray-700 px-2 py-1 rounded font-normal text-gray-300 hidden sm:inline-block">10 รายการล่าสุด</span></h1>
+                        <button type="button" onclick="toggleClearHistoryModal()" class="text-xs bg-gray-700 hover:bg-red-500 text-white px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg transition shadow border border-gray-600 hover:border-red-600 font-semibold flex items-center gap-1.5"><i class="fas fa-trash-alt"></i> ล้างประวัติ</button>
                     </div>
-                    <div class="p-4 bg-gray-50 min-h-[150px]">
-                        <ul id="historyList" class="space-y-3">
-                            <li class="text-center text-gray-400 text-sm py-8 font-medium">ยังไม่มีรายการบันทึกในวันนี้</li>
+                    <div class="p-3 sm:p-4 bg-gray-50 min-h-[150px]">
+                        <ul id="historyList" class="space-y-2 sm:space-y-3">
+                            <li class="text-center text-gray-400 text-xs sm:text-sm py-6 font-medium">ยังไม่มีรายการบันทึกในวันนี้</li>
                         </ul>
                     </div>
                 </div>
@@ -396,8 +456,8 @@
         </div>
     </div>
     
-    <!-- Confirmation Modal สำหรับลบประวัติ (แสดงเฉพาะในโหมดเครื่องคิดเลข) -->
-    <div id="clearHistoryModal" class="history-modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[11000]">
+    <!-- Confirmation Modal สำหรับลบประวัติ (หน้าเครื่องคิดเลข) -->
+    <div id="clearHistoryModal" class="calc-modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[11000]">
         <div class="absolute w-full h-full bg-gray-900 opacity-60 backdrop-blur-sm" onclick="toggleClearHistoryModal()"></div>
         <div class="bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-hidden transform transition-all border border-gray-200">
             <div class="py-5 text-left px-6">
@@ -483,16 +543,17 @@
     <!-- MAIN SCRIPT -->
     <script>
         // ==========================================
-        // WINDOW ROUTING & SETUP (แยกจอ/ซ้อนจอ)
+        // WINDOW ROUTING (จัดการเปิดหน้าต่างแยก)
         // ==========================================
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
             const isCalcMode = urlParams.get('mode') === 'calc';
 
             if (isCalcMode) {
-                // ซ่อนจอหลัก เปิดจอคำนวณจำนวนยา
+                // ซ่อนจอหลัก เปิดจอเครื่องคิดเลข
                 document.getElementById('mainAppView').style.display = 'none';
                 document.getElementById('calcAppView').style.display = 'flex';
+                document.querySelector('button[onclick="openCalcWindow()"]').style.display = 'none'; // ซ่อนปุ่มลอย
                 document.title = "คำนวณจำนวนยาตามวันนัด - Warfarin";
                 
                 // Initialize Popup components
@@ -510,11 +571,12 @@
             checkAndResetHistoryMidnight();
         });
 
-        // เปิดหน้าต่างใหม่
+        // ฟังก์ชันสำหรับเปิดแท็บใหม่
         window.openCalcWindow = function() {
             const baseUrl = window.location.href.split('?')[0];
             window.open(baseUrl + '?mode=calc', '_blank');
         };
+
 
         // ==========================================
         // 1. ระบบคำนวณ Warfarin (หน้าหลัก)
@@ -539,6 +601,112 @@
         const appointmentFields = document.getElementById('appointmentFields');
         const mainDaysResultDiv = document.getElementById('mainDaysResult');
         const mainYearToggle = document.getElementById('mainYearToggle');
+
+        // ----- ระบบแนะนำการปรับยาตามค่า INR (Clinical Decision Support) -----
+        const targetInrRadios = document.querySelectorAll('input[name="targetInr"]');
+        const currentInrInput = document.getElementById('currentInrInput');
+        const inrRecommendationBox = document.getElementById('inrRecommendationBox');
+        const currentInrContainer = document.getElementById('currentInrContainer');
+
+        function evaluateInr() {
+            const target = document.querySelector('input[name="targetInr"]:checked').value;
+            const inrValue = parseFloat(currentInrInput.value);
+            
+            // รีเซ็ตคลาสสีทั้งหมดก่อน
+            inrRecommendationBox.className = "hidden mt-5 rounded-xl border-2 shadow-sm animate-fade-in transition-all transform scale-100 relative z-10 overflow-hidden";
+            
+            if (target === 'major-bleeding') {
+                currentInrContainer.classList.add('hidden'); // ซ่อนช่องกรอก INR ถ้าระบุว่า Bleeding
+                inrRecommendationBox.classList.remove('hidden');
+                inrRecommendationBox.classList.add('bg-gradient-to-br', 'from-red-50', 'to-red-100', 'border-red-400', 'text-red-900');
+                
+                inrRecommendationBox.innerHTML = `
+                    <div class="flex flex-col items-center justify-center p-4 sm:p-6 text-center">
+                        <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-red-200 flex items-center justify-center mb-3 shadow-sm text-red-600 animate-pulse">
+                            <i class="fas fa-exclamation-triangle text-2xl sm:text-3xl"></i>
+                        </div>
+                        <div class="font-bold text-[10px] sm:text-xs mb-2 opacity-80 uppercase tracking-widest bg-white/60 px-3 py-1 rounded-full text-red-700">
+                            Major Bleeding with any INR
+                        </div>
+                        <div class="text-base sm:text-lg font-bold leading-relaxed space-y-1.5 mt-2 w-full max-w-sm text-left mx-auto">
+                            <div class="flex items-start gap-2"><i class="fas fa-check-circle mt-1 text-red-500"></i> <span>Vitamin K 10 mg IV</span></div>
+                            <div class="flex items-start gap-2"><i class="fas fa-check-circle mt-1 text-red-500"></i> <span>Fresh Frozen Plasma (FFP)</span></div>
+                            <div class="flex items-start gap-2"><i class="fas fa-check-circle mt-1 text-red-500"></i> <span>Repeat Vitamin K every 12 hrs if needed</span></div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            currentInrContainer.classList.remove('hidden');
+
+            if (isNaN(inrValue) || inrValue < 0) {
+                inrRecommendationBox.classList.add('hidden');
+                return;
+            }
+
+            inrRecommendationBox.classList.remove('hidden');
+            let recommendation = '';
+            let statusColor = ''; 
+            let targetText = target === '2-3' ? '2.0 - 3.0' : '2.5 - 3.5';
+
+            if (target === '2-3') {
+                if (inrValue < 1.5) { statusColor = 'yellow'; recommendation = 'ปรับเพิ่มขนาดยา 10 - 20%'; }
+                else if (inrValue >= 1.5 && inrValue <= 1.9) { statusColor = 'yellow'; recommendation = 'ปรับเพิ่มขนาดยา 5 - 10%'; }
+                else if (inrValue >= 2.0 && inrValue <= 3.0) { statusColor = 'green'; recommendation = 'คงขนาดยาเดิม'; }
+                else if (inrValue >= 3.1 && inrValue <= 3.9) { statusColor = 'yellow'; recommendation = 'ปรับลดขนาดยา 5 - 10%'; }
+                else if (inrValue >= 4.0 && inrValue <= 4.9) { statusColor = 'orange'; recommendation = '<span class="bg-orange-200 px-2 py-1 rounded-md mb-2 inline-block text-sm sm:text-base">Hold 1 dose</span><br>+ ปรับลดขนาดยา 5 - 10%<br><span class="text-[11px] sm:text-xs font-normal text-gray-600 mt-1 inline-block">(CPG แนะนำ ลดขนาดยา 10%)</span>'; }
+                else if (inrValue >= 5.0 && inrValue <= 8.9) { statusColor = 'red'; recommendation = '<span class="bg-red-200 text-red-800 px-2 py-1 rounded-md mb-2 inline-block text-sm sm:text-base">Hold 1 - 2 dose</span><br>+ Vitamin K 1 mg orally<br>+ ปรับลดขนาดยา 5 - 10%'; }
+                else if (inrValue >= 9.0) { statusColor = 'red'; recommendation = '<div class="text-xs sm:text-sm bg-red-800 text-white px-3 py-1 rounded-full mb-3 inline-block">กรณี No bleeding</div><br>Hold ยา<br>+ Vitamin K 5 - 10 mg orally<br>+ ปรับลดขนาดยา 5 - 10%'; }
+            } else if (target === '2.5-3.5') {
+                if (inrValue < 1.9) { statusColor = 'yellow'; recommendation = 'ปรับเพิ่มขนาดยา 10 - 20%'; }
+                else if (inrValue >= 1.9 && inrValue <= 2.4) { statusColor = 'yellow'; recommendation = 'ปรับเพิ่มขนาดยา 5 - 10%'; }
+                else if (inrValue >= 2.5 && inrValue <= 3.5) { statusColor = 'green'; recommendation = 'คงขนาดยาเดิม'; }
+                else if (inrValue >= 3.6 && inrValue <= 4.5) { statusColor = 'yellow'; recommendation = 'ปรับลดขนาดยา 5 - 10%'; }
+                else if (inrValue >= 4.6 && inrValue <= 4.9) { statusColor = 'orange'; recommendation = '<span class="bg-orange-200 px-2 py-1 rounded-md mb-2 inline-block text-sm sm:text-base">Hold 1 dose</span><br>+ ปรับลดขนาดยา 5 - 10%<br><span class="text-[11px] sm:text-xs font-normal text-gray-600 mt-1 inline-block">(CPG แนะนำ ลดขนาดยา 10%)</span>'; }
+                else if (inrValue >= 5.0 && inrValue <= 8.9) { statusColor = 'red'; recommendation = '<span class="bg-red-200 text-red-800 px-2 py-1 rounded-md mb-2 inline-block text-sm sm:text-base">Hold 1 - 2 dose</span><br>+ Vitamin K 1 mg orally<br>+ ปรับลดขนาดยา 5 - 10%'; }
+                else if (inrValue >= 9.0) { statusColor = 'red'; recommendation = '<div class="text-xs sm:text-sm bg-red-800 text-white px-3 py-1 rounded-full mb-3 inline-block">กรณี No bleeding</div><br>Hold ยา<br>+ Vitamin K 5 - 10 mg orally<br>+ ปรับลดขนาดยา 5 - 10%'; }
+            }
+
+            let icon = ''; let iconColor = '';
+            
+            if (statusColor === 'green') {
+                inrRecommendationBox.classList.add('bg-gradient-to-br', 'from-emerald-50', 'to-emerald-100', 'border-emerald-300', 'text-emerald-900');
+                icon = 'fa-check-circle'; iconColor = 'text-emerald-500';
+                recommendation += '<br><span class="text-xs sm:text-sm font-normal mt-2 inline-block bg-emerald-200/50 px-3 py-1 rounded-full"><i class="fas fa-thumbs-up mr-1"></i> Target achieved</span>';
+            }
+            else if (statusColor === 'yellow') {
+                inrRecommendationBox.classList.add('bg-gradient-to-br', 'from-yellow-50', 'to-yellow-100', 'border-yellow-400', 'text-yellow-900');
+                icon = 'fa-info-circle'; iconColor = 'text-yellow-600';
+            }
+            else if (statusColor === 'orange') {
+                inrRecommendationBox.classList.add('bg-gradient-to-br', 'from-orange-50', 'to-orange-100', 'border-orange-400', 'text-orange-900');
+                icon = 'fa-exclamation-circle'; iconColor = 'text-orange-500';
+            }
+            else if (statusColor === 'red') {
+                inrRecommendationBox.classList.add('bg-gradient-to-br', 'from-red-50', 'to-red-100', 'border-red-400', 'text-red-900');
+                icon = 'fa-exclamation-triangle'; iconColor = 'text-red-600';
+            }
+
+            inrRecommendationBox.innerHTML = `
+                <div class="flex flex-col items-center justify-center p-4 sm:p-5 text-center relative">
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white flex items-center justify-center mb-3 shadow-sm border border-white">
+                        <i class="fas ${icon} text-3xl sm:text-4xl ${iconColor}"></i>
+                    </div>
+                    <div class="font-bold text-[10px] sm:text-xs mb-2 opacity-80 uppercase tracking-widest bg-white/50 px-3 py-1 rounded-full">
+                        เป้าหมาย: ${targetText}
+                    </div>
+                    <div class="text-lg sm:text-xl font-black leading-snug drop-shadow-sm">
+                        ${recommendation}
+                    </div>
+                </div>
+            `;
+        }
+
+        // จับ Event ทันทีที่มีการพิมพ์ INR หรือเปลี่ยน Target
+        if(targetInrRadios) targetInrRadios.forEach(radio => radio.addEventListener('change', evaluateInr));
+        if(currentInrInput) currentInrInput.addEventListener('input', evaluateInr);
+
 
         // ควบคุมปี พ.ศ. / ค.ศ. ในหน้าต่าง Flatpickr
         const updateMainFlatpickrYearDisplay = (instance) => {
@@ -1577,7 +1745,7 @@
             const body = document.querySelector('body');
             const modal = document.querySelector('#clearHistoryModal');
             modal.classList.toggle('opacity-0'); modal.classList.toggle('pointer-events-none'); 
-            body.classList.toggle('history-modal-active');
+            body.classList.toggle('calc-modal-active');
         }
 
         window.performClearHistory = function() {
