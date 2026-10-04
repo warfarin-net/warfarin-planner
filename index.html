@@ -52,7 +52,7 @@
         .calc-modal { transition: opacity 0.2s ease, transform 0.2s ease; font-family: 'Google Sans', 'Prompt', sans-serif;}
         body.calc-modal-active { overflow: hidden; }
         
-        /* Animations for Appointed Day Calc */
+        /* Animations */
         @keyframes fade-blink {
             0%, 100% { opacity: 0; transform: scale(0.9); }
             10%, 90% { opacity: 1; transform: scale(1); }
@@ -81,6 +81,37 @@
 <body class="bg-gray-100 p-4 sm:p-6">
     <!-- MAIN WARFARIN CALCULATOR -->
     <div id="mainAppView" class="max-w-5xl mx-auto bg-white p-6 rounded-2xl shadow-lg relative z-10">
+        
+        <!-- SIDEBAR NAVIGATION (Floating Left) -->
+        <nav class="fixed left-0 top-1/2 -translate-y-1/2 z-[60] flex flex-col gap-2 sm:gap-3 no-print">
+            <button onclick="scrollToSection('section-inr')" title="ประเมินขนาดยา - ค่า INR" class="group flex items-center bg-white/90 backdrop-blur shadow-[2px_2px_10px_rgba(0,0,0,0.1)] border border-gray-200 border-l-0 rounded-r-xl sm:rounded-2xl sm:ml-4 p-2 sm:p-3 hover:bg-blue-50 hover:shadow-blue-200 transition-all cursor-pointer">
+                <div class="text-blue-600 w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center transition-transform group-hover:scale-110">
+                    <i class="fas fa-stethoscope text-lg sm:text-xl"></i>
+                </div>
+                <span class="max-w-0 overflow-hidden opacity-0 group-hover:max-w-[170px] group-hover:opacity-100 group-hover:ml-2 transition-all duration-300 whitespace-nowrap text-xs sm:text-sm font-bold text-blue-800 text-left">
+                    ประเมินขนาดยา - ค่า INR
+                </span>
+            </button>
+
+            <button onclick="scrollToSection('section-dose')" title="คำนวณขนาดยา" class="group flex items-center bg-white/90 backdrop-blur shadow-[2px_2px_10px_rgba(0,0,0,0.1)] border border-gray-200 border-l-0 rounded-r-xl sm:rounded-2xl sm:ml-4 p-2 sm:p-3 hover:bg-blue-50 hover:shadow-blue-200 transition-all cursor-pointer">
+                <div class="text-blue-600 w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center transition-transform group-hover:scale-110">
+                    <i class="fas fa-pills text-lg sm:text-xl"></i>
+                </div>
+                <span class="max-w-0 overflow-hidden opacity-0 group-hover:max-w-[150px] group-hover:opacity-100 group-hover:ml-2 transition-all duration-300 whitespace-nowrap text-xs sm:text-sm font-bold text-blue-800 text-left">
+                    คำนวณขนาดยา
+                </span>
+            </button>
+
+            <button onclick="scrollToSection('section-appointment')" title="จำนวนยาตามนัด" class="group flex items-center bg-white/90 backdrop-blur shadow-[2px_2px_10px_rgba(0,0,0,0.1)] border border-gray-200 border-l-0 rounded-r-xl sm:rounded-2xl sm:ml-4 p-2 sm:p-3 hover:bg-blue-50 hover:shadow-blue-200 transition-all cursor-pointer">
+                <div class="text-blue-600 w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center transition-transform group-hover:scale-110">
+                    <i class="fas fa-calendar-check text-lg sm:text-xl"></i>
+                </div>
+                <span class="max-w-0 overflow-hidden opacity-0 group-hover:max-w-[150px] group-hover:opacity-100 group-hover:ml-2 transition-all duration-300 whitespace-nowrap text-xs sm:text-sm font-bold text-blue-800 text-left">
+                    จำนวนยาตามนัด
+                </span>
+            </button>
+        </nav>
+
         <div class="absolute top-6 right-6 no-print">
             <span class="bg-blue-100 text-blue-700 text-xs font-semibold px-2.5 py-1 rounded-full">Warfarin คิดแป๊ปเดียว !</span>
         </div>
@@ -96,8 +127,8 @@
 
         <hr class="my-6 border-gray-300 no-print">
 
-        <!-- ระบบประเมินและแนะนำการปรับยาตามค่า INR -->
-        <div class="max-w-xl mx-auto mb-6 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden no-print">
+        <!-- ระบบประเมินและแนะนำการปรับขนาดยาตามค่า INR -->
+        <div id="section-inr" class="max-w-xl mx-auto mb-6 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden no-print scroll-mt-12 transition-all duration-500 relative">
             <!-- Header -->
             <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 sm:p-4 text-white flex items-center justify-center gap-2.5 shadow-inner">
                 <div class="bg-white/20 p-1.5 sm:p-2 rounded-lg backdrop-blur text-white">
@@ -118,13 +149,13 @@
                             <label class="relative flex-1 cursor-pointer group">
                                 <input type="radio" name="targetInr" value="2-3" class="peer sr-only" checked>
                                 <div class="px-2 py-2 sm:px-3 sm:py-2.5 rounded-lg border-2 border-gray-200 text-gray-500 font-bold text-center text-xs sm:text-sm transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:bg-gray-50 peer-checked:shadow-sm">
-                                    Target 2.0 - 3.0
+                                    2.0 - 3.0
                                 </div>
                             </label>
                             <label class="relative flex-1 cursor-pointer group">
                                 <input type="radio" name="targetInr" value="2.5-3.5" class="peer sr-only">
                                 <div class="px-2 py-2 sm:px-3 sm:py-2.5 rounded-lg border-2 border-gray-200 text-gray-500 font-bold text-center text-xs sm:text-sm transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:bg-gray-50 peer-checked:shadow-sm">
-                                    Target 2.5 - 3.5
+                                    2.5 - 3.5
                                 </div>
                             </label>
                             <label class="relative flex-1 cursor-pointer group">
@@ -152,120 +183,124 @@
             </div>
         </div>
 
-        <div class="max-w-2xl mx-auto no-print">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label for="previousDoseInput" class="block text-gray-700 text-sm font-bold mb-2">ขนาดยาก่อนหน้า (mg/week)</label>
-                    <input type="number" id="previousDoseInput" class="w-full border border-gray-300 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.1" min="0">
+        <div id="section-dose" class="scroll-mt-12 transition-all duration-500 rounded-2xl p-1 sm:p-3 sm:-mx-3 border border-transparent">
+            <div class="max-w-2xl mx-auto no-print">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="previousDoseInput" class="block text-gray-700 text-sm font-bold mb-2">ขนาดยาก่อนหน้า (mg/week)</label>
+                        <input type="number" id="previousDoseInput" class="w-full border border-gray-300 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.5" min="0">
+                    </div>
+                    <div>
+                        <label for="weeklyDoseInput" class="block text-gray-700 text-sm font-bold mb-2">ขนาดยาใหม่ (mg/week)</label>
+                        <input type="number" id="weeklyDoseInput" class="w-full border border-gray-300 px-3 py-2 rounded-lg bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-500" step="0.5" min="0">
+                    </div>
                 </div>
-                <div>
-                    <label for="weeklyDoseInput" class="block text-gray-700 text-sm font-bold mb-2">ขนาดยาใหม่ (mg/week)</label>
-                    <input type="number" id="weeklyDoseInput" class="w-full border border-gray-300 px-3 py-2 rounded-lg bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-500" step="0.1" min="0">
-                </div>
-            </div>
-            <div class="mb-4 flex justify-center">
-                <div class="flex items-start">
-                    <input type="checkbox" id="allowHalf" checked class="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 accent-orange-500 mt-1 flex-shrink-0 cursor-pointer">
-                    <div class="ml-2 text-left">
-                        <label for="allowHalf" class="text-gray-700 text-sm font-bold cursor-pointer">ใช้ทั้งยา เม็ดเต็ม และ ครึ่ง (1/2) เม็ด ในการคำนวณ</label>
-                        <p class="text-xs text-gray-500 mt-1 leading-tight">(หากต้องการใช้เฉพาะยาเม็ดเต็ม ในการคำนวณเท่านั้น! - กรุณาเอาเครื่องหมาย ✓ ออก)</p>
+                <div class="mb-4 flex justify-center">
+                    <div class="flex items-start">
+                        <input type="checkbox" id="allowHalf" checked class="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 accent-orange-500 mt-1 flex-shrink-0 cursor-pointer">
+                        <div class="ml-2 text-left">
+                            <label for="allowHalf" class="text-gray-700 text-sm font-bold cursor-pointer">ใช้ทั้งยา เม็ดเต็ม และ ครึ่ง (1/2) เม็ด ในการคำนวณ</label>
+                            <p class="text-xs text-gray-500 mt-1 leading-tight">(หากต้องการใช้เฉพาะยาเม็ดเต็ม ในการคำนวณเท่านั้น! - กรุณาเอาเครื่องหมาย ✓ ออก)</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="my-4 pt-2 no-print">
-            <label class="block text-gray-700 text-sm font-bold mb-2 text-center">เลือกขนาดยาที่ใช้คำนวณ</label>
-            <div id="pillSelection" class="flex justify-center gap-x-3 sm:gap-x-6 flex-wrap">
-                <div class="flex items-center">
-                    <input type="checkbox" id="pill-1" value="1" class="pill-checkbox form-checkbox h-5 w-5 text-blue-600 accent-orange-500">
-                    <label for="pill-1" class="ml-2 flex items-center gap-x-2 cursor-pointer">
-                        <span class="pill pill-1"></span> 1 mg
-                    </label>
-                </div>
-                <div class="flex items-center">
-                    <input type="checkbox" id="pill-2" value="2" class="pill-checkbox form-checkbox h-5 w-5 text-blue-600 accent-orange-500" checked>
-                    <label for="pill-2" class="ml-2 flex items-center gap-x-2 cursor-pointer">
-                        <span class="pill pill-2"></span> 2 mg
-                    </label>
-                </div>
-                <div class="flex items-center">
-                    <input type="checkbox" id="pill-3" value="3" class="pill-checkbox form-checkbox h-5 w-5 text-blue-600 accent-orange-500" checked>
-                    <label for="pill-3" class="ml-2 flex items-center gap-x-2 cursor-pointer">
-                        <span class="pill pill-3"></span> 3 mg
-                    </label>
-                </div>
-                <div class="flex items-center">
-                    <input type="checkbox" id="pill-5" value="5" class="pill-checkbox form-checkbox h-5 w-5 text-blue-600 accent-orange-500" checked>
-                    <label for="pill-5" class="ml-2 flex items-center gap-x-2 cursor-pointer">
-                        <span class="pill pill-5"></span> 5 mg
-                    </label>
-                </div>
-            </div>
-        </div>
-
-        <hr class="my-6 border-gray-300 no-print">
-
-        <div class="my-4 pt-2 no-print">
-            <label class="block text-gray-700 text-sm font-bold mb-2 text-center">รูปแบบวันพิเศษ/หยุดยา</label>
-            <div class="flex justify-center gap-x-4 sm:gap-x-8">
-                <div class="flex items-center">
-                    <input type="radio" id="patternFriSun" name="specialDayPattern" value="fri-sun" class="form-radio h-4 w-4 text-blue-600 accent-orange-500" checked>
-                    <label for="patternFriSun" class="ml-2 text-gray-700">ศุกร์/เสาร์/อาทิตย์ (ค่าเริ่มต้น)</label>
-                </div>
-                <div class="flex items-center">
-                    <input type="radio" id="patternMonWedFri" name="specialDayPattern" value="mon-wed-fri" class="form-radio h-4 w-4 text-blue-600 accent-orange-500">
-                    <label for="patternMonWedFri" class="ml-2 text-gray-700">กระจายขนาดยา (จันทร์/พุธ/ศุกร์)</label>
-                </div>
-            </div>
-        </div>
-
-        <div id="adjustmentTable" class="my-4 no-print"></div>
-        <div class="flex justify-center no-print">
-            <button id="showBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg mb-4 w-full md:w-auto hover:bg-blue-700 transition duration-150 ease-in-out shadow-md flex items-center justify-center">แสดงตัวเลือก</button>
-        </div>
-        <div id="percentageChange" class="text-center my-4 no-print" aria-live="polite"></div>
-
-        <hr class="my-6 border-gray-300 no-print">
-        
-        <div class="flex items-center justify-center no-print">
-            <input type="checkbox" id="appointmentToggle" class="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 accent-orange-500">
-            <label for="appointmentToggle" class="ml-2 text-gray-800 font-bold">คำนวณจำนวนยาตามนัด</label>
-        </div>
-        <p class="text-center text-xs text-gray-500 mt-1 no-print">*หากไม่ระบุ จะคำนวณยาที่ใช้ใน 1 สัปดาห์</p>
-        
-        <div id="appointmentFields" class="hidden mt-4 no-print">
-            <div class="flex items-center justify-end mb-3 gap-2 text-sm font-bold text-gray-700">
-                <span>ค.ศ.</span>
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" id="mainYearToggle" class="sr-only peer" checked>
-                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-                <span class="text-blue-700">พ.ศ.</span>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label for="mainStartDate" class="block text-gray-700 text-sm font-bold mb-2">วันที่เริ่มต้น (วันที่มา):</label>
-                    <input type="text" id="mainStartDate" placeholder="วว/ดด/ปปปป" class="w-full border border-gray-300 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white text-gray-800 text-center font-semibold">
-                </div>
-                <div>
-                    <label for="mainEndDate" class="block text-gray-700 text-sm font-bold mb-2">วันนัดครั้งถัดไป:</label>
-                    <input type="text" id="mainEndDate" placeholder="วว/ดด/ปปปป" class="w-full border border-gray-300 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white text-gray-800 text-center font-semibold">
-                </div>
-            </div>
             
-            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 bg-blue-50/70 p-2.5 sm:p-3 rounded-lg border border-blue-200 mb-3">
-                <label class="text-xs sm:text-sm font-bold text-blue-800 whitespace-nowrap"><i class="fas fa-forward mr-1"></i> หรือ นัดล่วงหน้า:</label>
-                <input type="number" id="mainQuickDurationValue" placeholder="ระบุจำนวน (ตัวเลข)" min="1" class="w-36 sm:w-44 p-1.5 border border-blue-300 rounded-md focus:ring-2 focus:ring-[#3C79F5] outline-none text-center text-sm sm:text-base font-bold text-blue-700 shadow-inner">
-                <select id="mainQuickDurationUnit" class="p-1.5 border border-blue-300 rounded-md text-xs sm:text-sm font-bold bg-white text-gray-700 focus:ring-2 focus:ring-[#3C79F5] outline-none cursor-pointer shadow-sm">
-                    <option value="days" selected>วัน (Days)</option>
-                    <option value="weeks">สัปดาห์ (Weeks)</option>
-                    <option value="months">เดือน (Months)</option>
-                </select>
-            </div> 
+            <div class="my-4 pt-2 no-print">
+                <label class="block text-gray-700 text-sm font-bold mb-2 text-center">เลือกขนาดยาที่ใช้คำนวณ</label>
+                <div id="pillSelection" class="flex justify-center gap-x-3 sm:gap-x-6 flex-wrap">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="pill-1" value="1" class="pill-checkbox form-checkbox h-5 w-5 text-blue-600 accent-orange-500">
+                        <label for="pill-1" class="ml-2 flex items-center gap-x-2 cursor-pointer">
+                            <span class="pill pill-1"></span> 1 mg
+                        </label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="pill-2" value="2" class="pill-checkbox form-checkbox h-5 w-5 text-blue-600 accent-orange-500" checked>
+                        <label for="pill-2" class="ml-2 flex items-center gap-x-2 cursor-pointer">
+                            <span class="pill pill-2"></span> 2 mg
+                        </label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="pill-3" value="3" class="pill-checkbox form-checkbox h-5 w-5 text-blue-600 accent-orange-500" checked>
+                        <label for="pill-3" class="ml-2 flex items-center gap-x-2 cursor-pointer">
+                            <span class="pill pill-3"></span> 3 mg
+                        </label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="pill-5" value="5" class="pill-checkbox form-checkbox h-5 w-5 text-blue-600 accent-orange-500" checked>
+                        <label for="pill-5" class="ml-2 flex items-center gap-x-2 cursor-pointer">
+                            <span class="pill pill-5"></span> 5 mg
+                        </label>
+                    </div>
+                </div>
+            </div>
 
-            <div id="mainDaysResult" class="text-center text-lg font-semibold mb-4 text-gray-700" aria-live="polite"></div>
+            <hr class="my-6 border-gray-300 no-print">
+
+            <div class="my-4 pt-2 no-print">
+                <label class="block text-gray-700 text-sm font-bold mb-2 text-center">รูปแบบวันพิเศษ/หยุดยา</label>
+                <div class="flex justify-center gap-x-4 sm:gap-x-8">
+                    <div class="flex items-center">
+                        <input type="radio" id="patternFriSun" name="specialDayPattern" value="fri-sun" class="form-radio h-4 w-4 text-blue-600 accent-orange-500" checked>
+                        <label for="patternFriSun" class="ml-2 text-gray-700">ศุกร์/เสาร์/อาทิตย์ (ค่าเริ่มต้น)</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="radio" id="patternMonWedFri" name="specialDayPattern" value="mon-wed-fri" class="form-radio h-4 w-4 text-blue-600 accent-orange-500">
+                        <label for="patternMonWedFri" class="ml-2 text-gray-700">กระจายขนาดยา (จันทร์/พุธ/ศุกร์)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div id="adjustmentTable" class="my-4 no-print"></div>
+            <div class="flex justify-center no-print">
+                <button id="showBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg mb-4 w-full md:w-auto hover:bg-blue-700 transition duration-150 ease-in-out shadow-md flex items-center justify-center">แสดงตัวเลือก</button>
+            </div>
+            <div id="percentageChange" class="text-center my-4 no-print" aria-live="polite"></div>
+        </div>
+
+        <hr class="my-6 border-gray-300 no-print">
+        
+        <div id="section-appointment" class="scroll-mt-12 transition-all duration-500 rounded-2xl p-2 sm:p-4 sm:-mx-4 border border-transparent">
+            <div class="flex items-center justify-center no-print">
+                <input type="checkbox" id="appointmentToggle" class="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 accent-orange-500">
+                <label for="appointmentToggle" class="ml-2 text-gray-800 font-bold">คำนวณจำนวนยาตามนัด</label>
+            </div>
+            <p class="text-center text-xs text-gray-500 mt-1 no-print">*หากไม่ระบุ จะคำนวณยาที่ใช้ใน 1 สัปดาห์</p>
+            
+            <div id="appointmentFields" class="hidden mt-4 no-print">
+                <div class="flex items-center justify-end mb-3 gap-2 text-sm font-bold text-gray-700">
+                    <span>ค.ศ.</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="mainYearToggle" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                    <span class="text-blue-700">พ.ศ.</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="mainStartDate" class="block text-gray-700 text-sm font-bold mb-2">วันที่เริ่มต้น (วันที่มา):</label>
+                        <input type="text" id="mainStartDate" placeholder="วว/ดด/ปปปป" class="w-full border border-gray-300 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white text-gray-800 text-center font-semibold">
+                    </div>
+                    <div>
+                        <label for="mainEndDate" class="block text-gray-700 text-sm font-bold mb-2">วันนัดครั้งถัดไป:</label>
+                        <input type="text" id="mainEndDate" placeholder="วว/ดด/ปปปป" class="w-full border border-gray-300 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white text-gray-800 text-center font-semibold">
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 bg-blue-50/70 p-2.5 sm:p-3 rounded-lg border border-blue-200 mb-3">
+                    <label class="text-xs sm:text-sm font-bold text-blue-800 whitespace-nowrap"><i class="fas fa-forward mr-1"></i> หรือ นัดล่วงหน้า:</label>
+                    <input type="number" id="mainQuickDurationValue" placeholder="ระบุจำนวน (ตัวเลข)" min="1" class="w-36 sm:w-44 p-1.5 border border-blue-300 rounded-md focus:ring-2 focus:ring-[#3C79F5] outline-none text-center text-sm sm:text-base font-bold text-blue-700 shadow-inner">
+                    <select id="mainQuickDurationUnit" class="p-1.5 border border-blue-300 rounded-md text-xs sm:text-sm font-bold bg-white text-gray-700 focus:ring-2 focus:ring-[#3C79F5] outline-none cursor-pointer shadow-sm">
+                        <option value="days" selected>วัน (Days)</option>
+                        <option value="weeks">สัปดาห์ (Weeks)</option>
+                        <option value="months">เดือน (Months)</option>
+                    </select>
+                </div> 
+
+                <div id="mainDaysResult" class="text-center text-lg font-semibold mb-4 text-gray-700" aria-live="polite"></div>
+            </div>
         </div>
         
         <hr class="my-6 border-gray-300 no-print">
@@ -290,7 +325,7 @@
             <div class="text-right text-xs text-gray-400 mb-6">
                 <p>พัฒนาโดย ภก.นราวิชญ์ คำยวง</p>
                 <p>กลุ่มงานเภสัชกรรม โรงพยาบาลอุทัย</p>
-                <p>อัพเดทล่าสุด: 24/9/2569</p>
+                <p>อัพเดทล่าสุด: 5/10/2569</p>
             </div>
             
             <div class="flex justify-center pb-2">
@@ -543,6 +578,33 @@
     <!-- MAIN SCRIPT -->
     <script>
         // ==========================================
+        // SIDEBAR NAVIGATION LOGIC
+        // ==========================================
+        window.scrollToSection = function(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                // อัตโนมัติติกถูกให้เปิดกล่องจำนวนยาตามนัด หากผู้ใช้คลิกเมนูนี้
+                if (id === 'section-appointment') {
+                    const toggle = document.getElementById('appointmentToggle');
+                    if (toggle && !toggle.checked) {
+                        toggle.checked = true;
+                        // กระตุ้นให้เกิด event change เพื่อให้กล่องกางออก
+                        toggle.dispatchEvent(new Event('change'));
+                    }
+                }
+                
+                // เลื่อนไปยังตำแหน่ง
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                // เพิ่ม Effect ไฮไลท์
+                el.classList.add('ring-4', 'ring-blue-500', 'shadow-2xl', 'scale-[1.01]');
+                setTimeout(() => {
+                    el.classList.remove('ring-4', 'ring-blue-500', 'shadow-2xl', 'scale-[1.01]');
+                }, 1500);
+            }
+        };
+
+        // ==========================================
         // WINDOW ROUTING (จัดการเปิดหน้าต่างแยก)
         // ==========================================
         document.addEventListener('DOMContentLoaded', function() {
@@ -576,7 +638,6 @@
             const baseUrl = window.location.href.split('?')[0];
             window.open(baseUrl + '?mode=calc', '_blank');
         };
-
 
         // ==========================================
         // 1. ระบบคำนวณ Warfarin (หน้าหลัก)
@@ -745,10 +806,6 @@
             onMonthChange: function(d, s, instance) { updateMainFlatpickrYearDisplay(instance); },
             onOpen: function(d, s, instance) { updateMainFlatpickrYearDisplay(instance); },
             onChange: function(selectedDates, dateStr, instance) {
-                // ป้องกันการลบข้อมูลถ้านี่คือการเซ็ตค่าด้วยสคริปต์ (ไม่ลบเวลาอัปเดตอัตโนมัติ)
-                if (instance.element.id === 'mainEndDate') {
-                    // document.getElementById('mainQuickDurationValue').value = ''; // ปิดการลบเพื่อแก้บั๊กพิมพ์เลขสองหลักไม่ได้
-                }
                 updateMainAppointmentDaysDisplay();
             }
         };
