@@ -932,15 +932,20 @@
                     if (normalDaysCount === 7) continue;
 
                     let stopDaysIndices = []; let specialDaysIndices = [];
+                    const totalNonNormal = numStopDays + numSpecialDays;
 
                     if (specialDayPattern === 'fri-sun') {
-                        stopDaysIndices = Array.from({ length: numStopDays }, (_, i) => 6 - i);
-                        specialDaysIndices = Array.from({ length: numSpecialDays }, (_, i) => 6 - numStopDays - i);
+                        const pool = [6, 5, 4].slice(0, totalNonNormal);
+                        stopDaysIndices = pool.slice(0, numStopDays);
+                        specialDaysIndices = pool.slice(numStopDays);
                     } else { 
-                        if (numStopDays > 0) stopDaysIndices = Array.from({ length: numStopDays }, (_, i) => 6 - i);
-                        if (numSpecialDays === 1) specialDaysIndices = [2]; 
-                        else if (numSpecialDays === 2) specialDaysIndices = [0, 4]; 
-                        else if (numSpecialDays === 3) specialDaysIndices = [0, 2, 4]; 
+                        let pool = [];
+                        if (totalNonNormal === 1) pool = [2]; 
+                        else if (totalNonNormal === 2) pool = [0, 4]; 
+                        else if (totalNonNormal === 3) pool = [0, 2, 4]; 
+                        
+                        stopDaysIndices = pool.slice(0, numStopDays);
+                        specialDaysIndices = pool.slice(numStopDays);
                     }
 
                     for (let baseDose = 0.5; baseDose <= ABSOLUTE_MAX_DAILY_DOSE; baseDose += 0.5) {
