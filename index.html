@@ -12,6 +12,7 @@
     
     <!-- FontAwesome สำหรับไอคอน -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -34,8 +35,9 @@
             display: inline-block; margin: 2px; border: 1.5px solid #374151; box-sizing: border-box;
         }
         .pill-1 { background-color: #E5E7EB; } 
-        .pill-2 { background-color: orange; } 
+        .pill-2 { background-color: #ffcc80; } /* ปรับสี 2 mg ตามที่ต้องการ */
         .pill-3 { background-color: skyblue; } 
+        .pill-4 { background-color: #fff59d; } /* เพิ่มสี 4 mg สีเหลืองอ่อน pastel */
         .pill-5 { background-color: pink; } 
         
         .pill.pill-half-left {
@@ -58,6 +60,7 @@
             10%, 90% { opacity: 1; transform: scale(1); }
             50% { color: #16a34a; }
         }
+        
         .saving-active { animation: fade-blink 1.5s ease-in-out forwards; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(5px); }
@@ -227,6 +230,13 @@
                             <span class="pill pill-3"></span> 3 mg
                         </label>
                     </div>
+                    <!-- เพิ่มขนาด 4 mg ตรงนี้ -->
+                    <div class="flex items-center">
+                        <input type="checkbox" id="pill-4" value="4" class="pill-checkbox form-checkbox h-5 w-5 text-blue-600 accent-orange-500">
+                        <label for="pill-4" class="ml-2 flex items-center gap-x-2 cursor-pointer">
+                            <span class="pill pill-4"></span> 4 mg
+                        </label>
+                    </div>
                     <div class="flex items-center">
                         <input type="checkbox" id="pill-5" value="5" class="pill-checkbox form-checkbox h-5 w-5 text-blue-600 accent-orange-500" checked>
                         <label for="pill-5" class="ml-2 flex items-center gap-x-2 cursor-pointer">
@@ -325,7 +335,7 @@
             <div class="text-right text-xs text-gray-400 mb-6">
                 <p>พัฒนาโดย ภก.นราวิชญ์ คำยวง</p>
                 <p>กลุ่มงานเภสัชกรรม โรงพยาบาลอุทัย</p>
-                <p>อัพเดทล่าสุด: 5/10/2569</p>
+                <p>อัพเดทล่าสุด: 7/10/2569</p>
             </div>
             
             <div class="flex justify-center pb-2">
@@ -338,16 +348,30 @@
                 </div>
             </div>
         </div>
-        
-        <!-- FLOATING BUTTON (Bottom Right - Opens New Window) -->
-        <button onclick="openCalcWindow()" title="เครื่องมือคำนวณจำนวนยา" class="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full shadow-2xl text-white flex items-center justify-center hover:scale-110 hover:shadow-blue-500/50 transition-all z-[50] group border-2 border-white no-print">
-            <i class="fas fa-calculator text-2xl group-hover:animate-bounce"></i>
-            <!-- Tooltip ข้อความแสดงเมื่อเอาเมาส์ชี้ -->
-            <span class="absolute bottom-full right-0 mb-3 px-3 py-2 bg-gray-800 text-white text-xs sm:text-sm font-medium rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-300 whitespace-nowrap shadow-xl flex items-center gap-1.5 translate-y-2 group-hover:translate-y-0">
-                <i class="fas fa-external-link-alt text-[10px] text-blue-300"></i> เปิดเครื่องมือคำนวณจำนวนยา
-                <div class="absolute -bottom-1 right-5 w-3 h-3 bg-gray-800 transform rotate-45"></div>
-            </span>
-        </button>
+
+        <!-- FLOATING BUTTONS (Bottom Right) -->
+        <div class="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 flex flex-col gap-4 z-[50] no-print">
+            
+            <!-- ปุ่มเครื่องมือคำนวณ TWD -->
+            <button onclick="openTwdWindow()" title="เครื่องมือคำนวณ TWD" class="w-14 h-14 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full shadow-2xl text-white flex items-center justify-center hover:scale-110 hover:shadow-teal-500/50 transition-all group border-2 border-white relative">
+                <i class="fas fa-chart-pie text-2xl group-hover:animate-spin"></i>
+                <!-- Tooltip -->
+                <span class="absolute right-full mr-4 top-1/2 -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-xs sm:text-sm font-medium rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-300 whitespace-nowrap shadow-xl flex items-center gap-1.5 translate-x-2 group-hover:translate-x-0">
+                    <i class="fas fa-external-link-alt text-[10px] text-teal-300"></i> เครื่องมือคำนวณ TWD (Total Weekly Dose)
+                    <div class="absolute right-[-4px] top-1/2 -translate-y-1/2 w-3 h-3 bg-gray-800 transform rotate-45"></div>
+                </span>
+            </button>
+
+            <!-- ปุ่มเครื่องมือคำนวณจำนวนยา (ของเดิม) -->
+            <button onclick="openCalcWindow()" title="เครื่องมือคำนวณจำนวนยา" class="w-14 h-14 bg-[#00838f] rounded-full shadow-2xl text-white flex items-center justify-center hover:scale-110 hover:shadow-[#00838f]/50 transition-all group border-2 border-white relative">
+                <i class="fas fa-calculator text-2xl group-hover:animate-bounce"></i>
+                <!-- Tooltip -->
+                <span class="absolute right-full mr-4 top-1/2 -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-xs sm:text-sm font-medium rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-300 whitespace-nowrap shadow-xl flex items-center gap-1.5 translate-x-2 group-hover:translate-x-0">
+                    <i class="fas fa-external-link-alt text-[10px] text-[#00838f]"></i> เครื่องมือคำนวณจำนวนยาตามนัด
+                    <div class="absolute right-[-4px] top-1/2 -translate-y-1/2 w-3 h-3 bg-gray-800 transform rotate-45"></div>
+                </span>
+            </button>
+        </div>
     </div>
 
     <!-- FULLSCREEN CALC APPOINTED DAY (Shown only in mode=calc) -->
@@ -615,7 +639,8 @@
                 // ซ่อนจอหลัก เปิดจอเครื่องคิดเลข
                 document.getElementById('mainAppView').style.display = 'none';
                 document.getElementById('calcAppView').style.display = 'flex';
-                document.querySelector('button[onclick="openCalcWindow()"]').style.display = 'none'; // ซ่อนปุ่มลอย
+                // ซ่อนปุ่ม Floating เมื่ออยู่ในโหมด calc
+                document.querySelector('.fixed.bottom-6.right-6').style.display = 'none'; 
                 document.title = "คำนวณจำนวนยาตามวันนัด - Warfarin";
                 
                 // Initialize Popup components
@@ -637,6 +662,13 @@
         window.openCalcWindow = function() {
             const baseUrl = window.location.href.split('?')[0];
             window.open(baseUrl + '?mode=calc', '_blank');
+        };
+
+        // ฟังก์ชันสำหรับเปิดแท็บ TWD
+        window.openTwdWindow = function() {
+            const currentUrl = window.location.href;
+            const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
+            window.open(baseUrl + '/twd.html', '_blank');
         };
 
         // ==========================================
@@ -768,7 +800,6 @@
         if(targetInrRadios) targetInrRadios.forEach(radio => radio.addEventListener('change', evaluateInr));
         if(currentInrInput) currentInrInput.addEventListener('input', evaluateInr);
 
-
         // ควบคุมปี พ.ศ. / ค.ศ. ในหน้าต่าง Flatpickr
         const updateMainFlatpickrYearDisplay = (instance) => {
             if (instance && instance.currentYearElement) {
@@ -796,7 +827,7 @@
                 return flatpickr.formatDate(date, format);
             },
             onReady: function(d, s, instance) {
-                if (instance.currentYearElement) {
+                if (instance && instance.currentYearElement) {
                     instance.currentYearElement.setAttribute('readonly', 'readonly');
                     instance.currentYearElement.addEventListener('focus', function() { this.blur(); });
                 }
@@ -1280,14 +1311,18 @@
             let startDate = null;
             
             if (appointmentToggle && appointmentToggle.checked) {
-                const startDt = mainFpStart.selectedDates[0];
-                const endDt = mainFpEnd.selectedDates[0];
+                const startDtRaw = mainFpStart.selectedDates[0];
+                const endDtRaw = mainFpEnd.selectedDates[0];
                 
-                if (startDt && endDt) {
+                if (startDtRaw && endDtRaw) {
+                    // สร้าง Date instance ใหม่เพื่อป้องกันการ mutate วันที่ใน Flatpickr instance (บั๊กปฏิทินรวน)
+                    const startDt = new Date(startDtRaw);
+                    const endDt = new Date(endDtRaw);
+                    
                     startDt.setHours(0, 0, 0, 0); endDt.setHours(0, 0, 0, 0);
                     if (endDt > startDt) {
                         const timeDiff = endDt.getTime() - startDt.getTime();
-                        daysUntilAppointment = Math.round(timeDiff / (1000 * 3600 * 24));
+                        daysUntilAppointment = Math.round(timeDiff / 86400000);
                         isAppointmentCalculation = true;
                         startDate = startDt;
                     }
@@ -1458,7 +1493,12 @@
                         return `${d} ${m} ${year}`;
                     }
                 },
-                onReady: function(d, s, instance) { instance.currentYearElement.disabled = true; updatePopupYearUI(instance); },
+                onReady: function(d, s, instance) { 
+                    if(instance && instance.currentYearElement) {
+                        instance.currentYearElement.disabled = true; 
+                    }
+                    updatePopupYearUI(instance); 
+                },
                 onYearChange: function(d, s, instance) { updatePopupYearUI(instance); },
                 onMonthChange: function(d, s, instance) { updatePopupYearUI(instance); },
                 onOpen: function(d, s, instance) { updatePopupYearUI(instance); }
@@ -1504,7 +1544,7 @@
             const targetDate = new Date(startDate);
             if (unit === 'days') { targetDate.setDate(targetDate.getDate() + val); } 
             else if (unit === 'weeks') { targetDate.setDate(targetDate.getDate() + (val * 7)); } 
-            else if (unit === 'months') { targetDate.setDate(targetDate.getDate() + (val * 30)); }
+            else if (unit === 'months') { targetDate.setMonth(targetDate.getMonth() + val); }
 
             if (fpPopupEnd) {
                 fpPopupEnd.setDate(targetDate, false); // ส่ง false เพื่อไม่ให้ไปทริกเกอร์ onChange (ลดปัญหาลบเลขที่กำลังพิมพ์)
@@ -1657,7 +1697,7 @@
             
             if (ed <= sd) { display.innerHTML = '<span class="text-red-500 text-sm sm:text-base">วันนัดหมายต้องหลังจากวันเริ่มต้น</span>'; return; }
             const diffTime = Math.abs(ed - sd);
-            let totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            let totalDays = Math.round(diffTime / 86400000);
             if (includeDay) totalDays += 1;
             const weeks = Math.floor(totalDays / 7); const remainingDays = totalDays % 7;
             let weekText = weeks > 0 ? `(${weeks} สัปดาห์${remainingDays > 0 ? ' ' + remainingDays + ' วัน' : ''})` : `(ไม่ถึง 1 สัปดาห์)`;
@@ -1725,7 +1765,7 @@
             const sd = new Date(startDate); const ed = new Date(endDate);
             sd.setHours(0,0,0,0); ed.setHours(0,0,0,0);
             const diffTime = Math.abs(ed - sd);
-            let totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); if (includeDay) totalDays += 1;
+            let totalDays = Math.round(diffTime / 86400000); if (includeDay) totalDays += 1;
 
             const item = {
                 id: Date.now(), type: 'calc_meds', label: 'ระยะเวลา',
