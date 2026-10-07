@@ -29,10 +29,13 @@
     <style>
         body { font-family: 'Prompt', sans-serif; }
         
+        .font-google { font-family: 'Google Sans', 'Prompt', sans-serif; }
+
         /* Custom pill styling */
         .pill { 
             width: 24px; height: 24px; border-radius: 9999px; 
             display: inline-block; margin: 2px; border: 1.5px solid #374151; box-sizing: border-box;
+            box-shadow: inset -2px -2px 4px rgba(0,0,0,0.1);
         }
         .pill-1 { background-color: #E5E7EB; } 
         .pill-2 { background-color: #ffcc80; } /* ปรับสี 2 mg ตามที่ต้องการ */
@@ -42,6 +45,7 @@
         
         .pill.pill-half-left {
             width: 12px; border-radius: 24px 0 0 24px; border-right: 1.5px dashed #374151; clip-path: none; 
+            box-shadow: inset 0px -2px 4px rgba(0,0,0,0.1);
         }
 
         /* Print CSS */
@@ -76,12 +80,33 @@
         .flatpickr-calendar { font-family: 'Prompt', sans-serif !important; box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important; border: 1px solid #e5e7eb !important; z-index: 99999 !important; }
         .flatpickr-day.selected { background: #3C79F5 !important; border-color: #3C79F5 !important; }
         
+        /* แอนิเมชันสำหรับ TWD */
+        @keyframes pop {
+            0% { transform: scale(0.95); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop { animation: pop 0.2s ease-out; }
+
+        @keyframes borderPulse {
+            0% { box-shadow: 0 0 0 2px #374151; border-color: #374151; }
+            50% { box-shadow: 0 0 0 6px rgba(55, 65, 81, 0.2); border-color: #6B7280; }
+            100% { box-shadow: 0 0 0 2px #374151; border-color: #374151; }
+        }
+
+        .active-day-ring {
+            animation: borderPulse 1.5s infinite ease-in-out !important;
+            background-color: #ffffff !important;
+            transform: translateY(-3px);
+        }
+        
         /* Z-index management */
         .calc-modal-container { z-index: 10000; }
         .calc-modal-overlay { z-index: 9999; }
     </style>
 </head>
-<body class="bg-gray-100 p-4 sm:p-6">
+<body class="bg-gray-100 p-4 sm:p-6 text-gray-800">
+
     <!-- MAIN WARFARIN CALCULATOR -->
     <div id="mainAppView" class="max-w-5xl mx-auto bg-white p-6 rounded-2xl shadow-lg relative z-10">
         
@@ -350,7 +375,7 @@
         </div>
 
         <!-- FLOATING BUTTONS (Bottom Right) -->
-        <div class="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 flex flex-col gap-4 z-[50] no-print">
+        <div class="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 flex flex-col gap-4 z-[50] no-print" id="floatingButtons">
             
             <!-- ปุ่มเครื่องมือคำนวณ TWD -->
             <button onclick="openTwdWindow()" title="เครื่องมือคำนวณ TWD" class="w-14 h-14 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full shadow-2xl text-white flex items-center justify-center hover:scale-110 hover:shadow-teal-500/50 transition-all group border-2 border-white relative">
@@ -516,55 +541,171 @@
     </div>
 
     <!-- FULLSCREEN TWD CALCULATOR (Shown only in mode=twd) -->
-    <div id="twdAppView" style="display: none;" class="max-w-5xl mx-auto bg-slate-100 min-h-screen sm:rounded-2xl shadow-2xl flex flex-col relative z-20">
-        <!-- Header -->
-        <div class="bg-teal-600 px-4 py-3 sm:py-4 sm:rounded-t-2xl flex justify-between items-center shadow-md z-10 shrink-0">
-            <div class="flex items-center gap-2 sm:gap-3">
-                <div class="bg-white/20 p-2 sm:p-2.5 rounded-lg backdrop-blur text-white shadow-inner">
-                    <i class="fas fa-chart-pie text-lg sm:text-xl"></i>
+    <div id="twdAppView" style="display: none;" class="w-full min-h-screen bg-[#f3f4f6] flex items-center justify-center p-0 sm:p-6 z-20 relative">
+        <div class="w-full max-w-4xl bg-white sm:rounded-2xl shadow-xl overflow-hidden relative flex flex-col min-h-screen sm:min-h-0 sm:max-h-[95vh]">
+            
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 sm:px-6 py-4 sm:py-5 text-white flex justify-between items-center shadow-md relative z-10 shrink-0">
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <div class="bg-white/20 p-2 sm:p-2.5 rounded-xl backdrop-blur-sm shadow-inner flex items-center justify-center">
+                        <i class="fas fa-calculator text-xl sm:text-2xl"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <h1 class="text-lg sm:text-xl md:text-2xl font-bold tracking-wide leading-tight">คำนวณขนาดยารวมต่อสัปดาห์</h1>
+                        <p class="text-blue-100 text-[10px] sm:text-xs md:text-sm">Warfarin Weekly Dose Calculator</p>
+                    </div>
                 </div>
-                <div class="flex flex-col">
-                    <span class="text-white font-bold text-lg md:text-xl leading-tight">เครื่องมือคำนวณ TWD</span>
-                    <span class="text-teal-100 text-[10px] sm:text-xs">Total Weekly Dose (ขนาดยารวมต่อสัปดาห์)</span>
-                </div>
+                <button onclick="window.close()" class="text-white hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center justify-center transition-colors text-xs sm:text-sm font-bold border border-transparent hover:border-white/30 whitespace-nowrap">
+                    <i class="fas fa-times mr-1"></i> ปิด
+                </button>
             </div>
-            <button onclick="window.close()" class="text-white hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center justify-center transition-colors text-xs sm:text-sm font-bold border border-transparent hover:border-white/30">
-                <i class="fas fa-times mr-1"></i> ปิด
-            </button>
-        </div>
 
-        <!-- Body -->
-        <div class="flex-1 overflow-y-auto p-3 sm:p-6 pb-20 custom-scrollbar">
-            <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 animate-fade-in relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-bl-full -z-10"></div>
+            <div class="p-4 sm:p-5 md:p-8 overflow-y-auto custom-scrollbar flex-1 pb-20 sm:pb-8">
                 
-                <h2 class="text-center font-bold text-base sm:text-lg text-gray-800 mb-4 sm:mb-6 flex items-center justify-center gap-2">
-                    <i class="fas fa-calendar-alt text-teal-500"></i> ระบุขนาดยาในแต่ละวัน
-                </h2>
-                
-                <div id="twdDaysContainer" class="space-y-2 sm:space-y-3">
-                    <!-- JS injects days here -->
+                <!-- TOTAL SCORE BOARD -->
+                <div class="mb-8 flex flex-col sm:flex-row items-center justify-between bg-slate-50 border-2 border-slate-200 rounded-2xl p-5 shadow-sm">
+                    <div class="flex items-center gap-3 mb-3 sm:mb-0">
+                        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl shadow-inner">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-gray-500 font-bold text-sm uppercase tracking-wider">ขนาดยารวมทั้งสัปดาห์</h2>
+                            <p class="text-xs text-gray-400">Total Weekly Dose</p>
+                        </div>
+                    </div>
+                    <div class="text-center sm:text-right">
+                        <span id="totalWeeklyDose" class="text-5xl sm:text-6xl font-black text-blue-700 font-google tracking-tight transition-all duration-300">0.0</span>
+                        <span class="text-xl sm:text-2xl font-bold text-gray-500 ml-1">mg/wk</span>
+                    </div>
                 </div>
 
-                <div class="mt-6 pt-6 border-t border-gray-200">
-                    <div class="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-xl p-5 text-center border-2 border-teal-200 shadow-sm relative overflow-hidden transform transition-all" id="twdResultCard">
-                        <i class="fas fa-pills absolute -right-4 -bottom-4 text-6xl text-teal-500/10 transform rotate-[-20deg]"></i>
-                        <p class="text-teal-800 font-bold mb-2 text-sm sm:text-base">ขนาดยารวมต่อสัปดาห์ (TWD)</p>
-                        <div class="text-4xl sm:text-6xl font-black text-teal-700 tracking-tight transition-all duration-300">
-                            <span id="twdResult">0</span> <span class="text-xl sm:text-2xl font-bold text-teal-600 ml-1">mg/week</span>
+                <!-- DAYS SELECTION -->
+                <div class="mb-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-3">
+                        <h3 class="font-bold text-gray-700 flex items-center gap-2">
+                            <i class="fas fa-calendar-alt text-blue-500"></i> 1. คลิกเลือกวันเพื่อจัดการยา
+                        </h3>
+                        <div class="flex items-center text-xs sm:text-sm bg-slate-100 p-1 rounded-lg border border-slate-200">
+                            <span class="text-gray-500 font-bold mr-2 ml-1 hidden sm:inline-block"><i class="fas fa-sort-amount-down"></i> เรียงวัน:</span>
+                            <label class="relative flex items-center cursor-pointer">
+                                <input type="radio" name="startDayOrderTwd" value="sun" class="peer sr-only" checked onchange="twdRenderDaysGrid()">
+                                <div class="px-3 py-1 rounded-md text-gray-500 font-bold peer-checked:bg-white peer-checked:text-blue-600 peer-checked:shadow-sm transition-all">อาทิตย์-เสาร์</div>
+                            </label>
+                            <label class="relative flex items-center cursor-pointer">
+                                <input type="radio" name="startDayOrderTwd" value="mon" class="peer sr-only" onchange="twdRenderDaysGrid()">
+                                <div class="px-3 py-1 rounded-md text-gray-500 font-bold peer-checked:bg-white peer-checked:text-blue-600 peer-checked:shadow-sm transition-all">จันทร์-อาทิตย์</div>
+                            </label>
+                        </div>
+                    </div>
+                    <div id="daysGrid" class="grid grid-cols-4 sm:grid-cols-7 gap-2 sm:gap-3">
+                        <!-- Days will be generated by JS -->
+                    </div>
+                </div>
+
+                <hr class="border-gray-200 my-6">
+
+                <!-- EDITOR PANEL -->
+                <div id="editorPanel" class="bg-white border-2 border-blue-100 rounded-2xl p-4 sm:p-6 shadow-md transition-all relative overflow-hidden">
+                    <!-- Decorative background -->
+                    <i class="fas fa-edit absolute -right-6 -bottom-6 text-9xl text-blue-50 transform -rotate-12 pointer-events-none"></i>
+                    
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-center mb-5 border-b border-gray-100 pb-3">
+                            <h3 class="font-bold text-base sm:text-lg text-gray-800" id="editorTitle">กำลังจัดการ: <span class="text-blue-600">วัน...</span></h3>
+                            <div class="text-xs sm:text-sm font-bold bg-blue-100 text-blue-700 px-3 py-1 rounded-full shadow-inner" id="dayTotalDoseBadge">รวม 0.0 mg</div>
+                        </div>
+
+                        <!-- Step 2: Pill Selection -->
+                        <div class="mb-5">
+                            <label class="block text-sm font-bold text-gray-600 mb-2">2. เลือกชนิดยา (ความแรง)</label>
+                            <div class="flex flex-wrap gap-2 sm:gap-4" id="pillSelector">
+                                <button onclick="twdSetActivePill(1)" id="btnPill1" class="flex-1 py-2 px-1 sm:px-3 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 font-bold text-gray-700 text-xs sm:text-base">
+                                    <span class="pill pill-1"></span> 1 mg
+                                </button>
+                                <button onclick="twdSetActivePill(2)" id="btnPill2" class="flex-1 py-2 px-1 sm:px-3 border-2 border-orange-400 bg-orange-50 rounded-xl shadow-sm transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 font-bold text-orange-800 transform scale-105 text-xs sm:text-base">
+                                    <span class="pill pill-2"></span> 2 mg
+                                </button>
+                                <button onclick="twdSetActivePill(3)" id="btnPill3" class="flex-1 py-2 px-1 sm:px-3 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 font-bold text-gray-700 text-xs sm:text-base">
+                                    <span class="pill pill-3"></span> 3 mg
+                                </button>
+                                <!-- เพิ่มปุ่ม 4 mg -->
+                                <button onclick="twdSetActivePill(4)" id="btnPill4" class="flex-1 py-2 px-1 sm:px-3 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 font-bold text-gray-700 text-xs sm:text-base">
+                                    <span class="pill pill-4"></span> 4 mg
+                                </button>
+                                <button onclick="twdSetActivePill(5)" id="btnPill5" class="flex-1 py-2 px-1 sm:px-3 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 font-bold text-gray-700 text-xs sm:text-base">
+                                    <span class="pill pill-5"></span> 5 mg
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Add Pill Buttons -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-bold text-gray-600 mb-2">
+                                3. กดเพิ่มยาให้วันนี้ <span class="text-[11px] sm:text-xs font-normal text-blue-600 ml-0.5 sm:ml-1 leading-tight sm:leading-normal block sm:inline mt-1 sm:mt-0">(คลิกซ้ำที่เม็ดยาขนาดนั้น ๆ : กรณีใช้ยาหลายเม็ด, หลายขนาด)</span>
+                            </label>
+                            <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                                <button onclick="twdAddPill(false)" id="btnAddFull" class="bg-white border-2 border-gray-300 hover:border-blue-400 hover:bg-blue-50 py-3 sm:py-4 rounded-xl shadow-sm transition-all flex flex-col items-center justify-center gap-2 active:scale-95 group">
+                                    <span id="visualFullAdd" class="pill pill-2 group-hover:scale-110 transition-transform"></span>
+                                    <span class="font-bold text-gray-700 text-sm sm:text-base">เต็มเม็ด</span>
+                                </button>
+                                <button onclick="twdAddPill(true)" id="btnAddHalf" class="bg-white border-2 border-gray-300 hover:border-blue-400 hover:bg-blue-50 py-3 sm:py-4 rounded-xl shadow-sm transition-all flex flex-col items-center justify-center gap-2 active:scale-95 group">
+                                    <span id="visualHalfAdd" class="pill pill-2 pill-half-left group-hover:scale-110 transition-transform"></span>
+                                    <span class="font-bold text-gray-700 text-sm sm:text-base">ครึ่งเม็ด (1/2)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Current Pills Display & Actions -->
+                        <div class="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-200 mb-5">
+                            <div class="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">รายการยาในวันนี้</div>
+                            <div id="currentPillsDisplay" class="min-h-[40px] flex flex-wrap items-center gap-2">
+                                <!-- Pills will be rendered here -->
+                                <span class="text-gray-400 text-sm italic">ไม่มีขนาดยา (หยุดยา)</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex flex-wrap gap-2 sm:gap-3 justify-between items-center pt-2 border-t border-gray-100">
+                            <div class="flex gap-2 w-full sm:w-auto">
+                                <button onclick="twdUndoLastPill()" class="flex-1 sm:flex-none text-xs sm:text-sm font-bold bg-white border border-gray-300 text-gray-600 px-3 sm:px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors shadow-sm active:scale-95">
+                                    <i class="fas fa-undo mr-1"></i> ลบล่าสุด
+                                </button>
+                                <button onclick="twdClearCurrentDay()" class="flex-1 sm:flex-none text-xs sm:text-sm font-bold bg-white border border-red-200 text-red-500 px-3 sm:px-4 py-2 rounded-lg hover:bg-red-50 transition-colors shadow-sm active:scale-95">
+                                    <i class="fas fa-ban mr-1"></i> หยุดยา
+                                </button>
+                            </div>
+                            <button onclick="twdApplyToAllDays()" id="twdApplyAllBtn" class="w-full sm:w-auto text-xs sm:text-sm font-bold bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors shadow-md flex items-center justify-center gap-2 active:scale-95 mt-2 sm:mt-0">
+                                <i class="fas fa-copy"></i> นำไปใช้ทุกวัน
+                            </button>
                         </div>
                     </div>
                 </div>
-                
-                <div class="mt-5 flex justify-center">
-                    <button onclick="resetTwd()" class="text-gray-500 hover:text-red-500 flex items-center gap-1.5 text-xs sm:text-sm font-bold px-4 py-2 rounded-lg bg-gray-50 shadow-sm hover:bg-red-50 transition-all border border-gray-200 hover:border-red-200">
-                        <i class="fas fa-redo-alt"></i> ล้างค่าทั้งหมด
+
+                <!-- Global Action -->
+                <div class="mt-6 text-center">
+                     <button onclick="twdPromptReset()" class="text-xs sm:text-sm font-bold text-gray-400 hover:text-red-500 underline transition-colors">
+                         <i class="fas fa-trash-alt mr-1"></i> ล้างข้อมูลเริ่มใหม่ทั้งหมด
+                     </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Custom Confirm Modal สำหรับ TWD -->
+        <div id="twdConfirmModal" class="absolute inset-0 bg-black/50 z-[100] hidden items-center justify-center backdrop-blur-sm transition-opacity opacity-0 rounded-none sm:rounded-2xl">
+            <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl transform scale-95 transition-transform" id="twdConfirmModalContent">
+                <h3 class="text-xl font-bold text-gray-800 mb-2"><i class="fas fa-exclamation-circle text-red-500 mr-2"></i>ยืนยันการล้างข้อมูล</h3>
+                <p class="text-gray-600 mb-6 text-sm">คุณต้องการล้างข้อมูลขนาดยาทั้งหมด และเริ่มต้นคำนวณใหม่ใช่หรือไม่?</p>
+                <div class="flex justify-end gap-3 border-t border-gray-100 pt-4">
+                    <button onclick="twdCloseConfirmModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-bold transition-colors">ยกเลิก</button>
+                    <button onclick="twdPerformReset()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold shadow-sm transition-colors flex items-center gap-2">
+                        <i class="fas fa-trash-alt"></i> ล้างข้อมูล
                     </button>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <!-- Confirmation Modal สำหรับลบประวัติ (หน้าเครื่องคิดเลข) -->
     <div id="clearHistoryModal" class="calc-modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[11000]">
         <div class="absolute w-full h-full bg-gray-900 opacity-60 backdrop-blur-sm" onclick="toggleClearHistoryModal()"></div>
@@ -687,12 +828,12 @@
             const isTwdMode = urlParams.get('mode') === 'twd';
 
             if (isCalcMode) {
-                // ซ่อนจอหลัก เปิดจอเครื่องคิดเลข
+                // ซ่อนจอหลัก เปิดจอเครื่องคิดเลขวันนัด
                 document.getElementById('mainAppView').style.display = 'none';
                 document.getElementById('calcAppView').style.display = 'flex';
                 document.getElementById('twdAppView').style.display = 'none';
-                // ซ่อนปุ่ม Floating เมื่ออยู่ในโหมด calc
-                document.querySelector('.fixed.bottom-6.right-6').style.display = 'none'; 
+                // ซ่อนปุ่ม Floating
+                document.getElementById('floatingButtons').style.display = 'none'; 
                 document.title = "คำนวณจำนวนยาตามวันนัด - Warfarin";
                 
                 // Initialize Popup components
@@ -705,9 +846,10 @@
                 document.getElementById('calcAppView').style.display = 'none';
                 document.getElementById('twdAppView').style.display = 'flex';
                 // ซ่อนปุ่ม Floating
-                document.querySelector('.fixed.bottom-6.right-6').style.display = 'none'; 
+                document.getElementById('floatingButtons').style.display = 'none'; 
                 document.title = "คำนวณ TWD - Warfarin";
                 
+                // Initialize TWD components
                 initTwdCalculator();
             } else {
                 // แสดงจอหลัก
@@ -1485,7 +1627,7 @@
         });
 
         // ==========================================
-        // 2. ระบบคำนวณจำนวนยาตามวันนัด (Separate Window)
+        // 2. ระบบคำนวณจำนวนยาตามวันนัด (Separate Window Logic)
         // ==========================================
 
         let forwardSaveTimeout;
@@ -1927,74 +2069,244 @@
         }
 
         // ==========================================
-        // 3. ระบบคำนวณ TWD (Total Weekly Dose)
+        // 3. ระบบคำนวณ TWD (Total Weekly Dose) - Isolated Logic
         // ==========================================
-        const twdDosageOptions = [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10];
-        let twdState = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
-        const twdColorMap = {
-            0: 'bg-red-100 text-red-700 border-red-200', 1: 'bg-yellow-100 text-yellow-700 border-yellow-200', 
-            2: 'bg-pink-100 text-pink-700 border-pink-200', 3: 'bg-green-100 text-green-700 border-green-200', 
-            4: 'bg-orange-100 text-orange-700 border-orange-200', 5: 'bg-blue-100 text-blue-700 border-blue-200', 
-            6: 'bg-purple-100 text-purple-700 border-purple-200'
-        };
+        
+        const twdDaysInfo = [
+            { id: 0, name: "อาทิตย์", short: "อา.", color: "text-red-600", bg: "bg-red-50", border: "border-red-200", hover: "hover:border-red-400" },
+            { id: 1, name: "จันทร์", short: "จ.", color: "text-yellow-600", bg: "bg-yellow-50", border: "border-yellow-200", hover: "hover:border-yellow-400" },
+            { id: 2, name: "อังคาร", short: "อ.", color: "text-pink-600", bg: "bg-pink-50", border: "border-pink-200", hover: "hover:border-pink-400" },
+            { id: 3, name: "พุธ", short: "พ.", color: "text-green-600", bg: "bg-green-50", border: "border-green-200", hover: "hover:border-green-400" },
+            { id: 4, name: "พฤหัสบดี", short: "พฤ.", color: "text-orange-600", bg: "bg-orange-50", border: "border-orange-200", hover: "hover:border-orange-400" },
+            { id: 5, name: "ศุกร์", short: "ศ.", color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200", hover: "hover:border-blue-400" },
+            { id: 6, name: "เสาร์", short: "ส.", color: "text-purple-600", bg: "bg-purple-50", border: "border-purple-200", hover: "hover:border-purple-400" }
+        ];
+
+        let twdSchedule = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+        let twdActiveDay = 1; // Default Monday
+        let twdActivePillMg = 2; // Default 2mg
 
         window.initTwdCalculator = function() {
-            renderTwdDays();
-            calculateTwd();
+            twdRenderDaysGrid();
+            twdSetActivePill(2);
+            twdUpdateEditorUI();
         }
 
-        window.renderTwdDays = function() {
-            const container = document.getElementById('twdDaysContainer');
-            if(!container) return;
+        window.twdRenderDaysGrid = function() {
+            const grid = document.getElementById('daysGrid');
+            if(!grid) return;
             let html = '';
             
-            // ใช้ daysOfWeek เรียงตาม (อาทิตย์ - เสาร์)
-            daysOfWeek.forEach(day => {
-                const colorClasses = twdColorMap[day.id];
+            // ตรวจสอบการเรียงลำดับวันจาก UI ของ TWD โดยเฉพาะ
+            const orderOption = document.querySelector('input[name="startDayOrderTwd"]:checked')?.value || 'sun';
+            let displayDays = [...twdDaysInfo];
+            if (orderOption === 'mon') {
+                const sunday = displayDays.shift(); // นำวันอาทิตย์ออก
+                displayDays.push(sunday); // ไปต่อท้าย
+            }
+            
+            displayDays.forEach(day => {
+                const pills = twdSchedule[day.id];
+                let dailyDose = 0;
+                let visualHtml = '';
+
+                if (pills.length === 0) {
+                    visualHtml = `<div class="text-[10px] sm:text-xs text-gray-400 mt-2 font-medium bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200">หยุดยา</div>`;
+                } else {
+                    visualHtml = `<div class="flex flex-wrap justify-center items-center gap-1 mt-2 min-h-[32px] w-full px-1">`;
+                    pills.forEach(p => {
+                        dailyDose += p.half ? p.mg * 0.5 : p.mg;
+                        const pillClass = p.half ? `pill pill-${p.mg} pill-half-left scale-90 sm:scale-100 transform origin-center` : `pill pill-${p.mg} scale-90 sm:scale-100 transform origin-center`;
+                        visualHtml += `<span class="${pillClass}"></span>`;
+                    });
+                    visualHtml += `</div>`;
+                }
+
+                const isActive = twdActiveDay === day.id;
+                const activeClass = isActive ? 'active-day-ring z-10' : `${day.bg} ${day.border} ${day.hover} border`;
+
                 html += `
-                <div class="flex items-center justify-between p-3 sm:p-4 rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-teal-200 transition-all group">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center font-bold text-sm ${colorClasses} border shadow-inner transition-transform group-hover:scale-110">
-                            ${day.short}
-                        </div>
-                        <span class="font-bold text-gray-700 text-sm sm:text-base">${day.name}</span>
+                    <div onclick="twdSelectDay(${day.id})" class="rounded-xl p-2 sm:p-3 cursor-pointer transition-all duration-200 flex flex-col items-center justify-between min-h-[100px] sm:min-h-[110px] shadow-sm select-none ${activeClass}">
+                        <div class="font-bold text-sm sm:text-base ${day.color}">${day.short}</div>
+                        ${visualHtml}
+                        <div class="mt-2 font-black text-gray-700 text-sm sm:text-lg bg-white/60 px-2 py-0.5 rounded-lg border border-gray-100 shadow-inner">${dailyDose > 0 ? dailyDose.toFixed(1) : '0.0'}</div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <select onchange="updateTwdDay(${day.id}, this.value)" class="p-2 border-2 border-gray-200 rounded-xl text-sm sm:text-base font-bold text-gray-800 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/30 outline-none text-center min-w-[90px] sm:min-w-[100px] cursor-pointer shadow-sm transition-all bg-gray-50 hover:bg-white">
-                            ${twdDosageOptions.map(val => `<option value="${val}" ${twdState[day.id] === val ? 'selected' : ''}>${val === 0 ? 'งดยา (0)' : val + ' mg'}</option>`).join('')}
-                        </select>
-                    </div>
-                </div>`;
+                `;
             });
-            container.innerHTML = html;
+            grid.innerHTML = html;
+            twdUpdateTotal();
         }
 
-        window.updateTwdDay = function(dayId, val) {
-            twdState[dayId] = parseFloat(val);
-            calculateTwd();
-        }
-
-        window.calculateTwd = function() {
-            const total = Object.values(twdState).reduce((sum, val) => sum + val, 0);
-            const resultEl = document.getElementById('twdResult');
-            const cardEl = document.getElementById('twdResultCard');
-            if(resultEl && cardEl) {
-                resultEl.innerText = total % 1 === 0 ? total : total.toFixed(2);
-                
-                // Animation effect
-                cardEl.classList.remove('scale-105');
-                void cardEl.offsetWidth; // trigger reflow
-                cardEl.classList.add('scale-105');
-                setTimeout(() => {
-                    cardEl.classList.remove('scale-105');
-                }, 200);
+        window.twdSelectDay = function(dayId) {
+            twdActiveDay = dayId;
+            twdRenderDaysGrid();
+            twdUpdateEditorUI();
+            
+            // Add pop animation to editor
+            const editor = document.getElementById('editorPanel');
+            if(editor) {
+                editor.classList.remove('animate-pop');
+                void editor.offsetWidth; // trigger reflow
+                editor.classList.add('animate-pop');
             }
         }
 
-        window.resetTwd = function() {
-            Object.keys(twdState).forEach(k => twdState[k] = 0);
-            renderTwdDays();
-            calculateTwd();
+        window.twdUpdateEditorUI = function() {
+            const day = twdDaysInfo.find(d => d.id === twdActiveDay);
+            const titleEl = document.getElementById('editorTitle');
+            if(titleEl) titleEl.innerHTML = `กำลังจัดการ: <span class="${day.color}">วัน${day.name}</span>`;
+            
+            // Render current pills
+            const pills = twdSchedule[twdActiveDay];
+            const display = document.getElementById('currentPillsDisplay');
+            let dailyDose = 0;
+            
+            if(display) {
+                if (pills.length === 0) {
+                    display.innerHTML = '<span class="text-gray-400 text-sm italic bg-white px-3 py-1 rounded-md border border-gray-200 shadow-sm">ไม่มีขนาดยา (หยุดยา)</span>';
+                } else {
+                    let html = '';
+                    pills.forEach((p, index) => {
+                        dailyDose += p.half ? p.mg * 0.5 : p.mg;
+                        const pillClass = p.half ? `pill pill-${p.mg} pill-half-left` : `pill pill-${p.mg}`;
+                        const text = p.half ? `${p.mg}mg ครึ่ง` : `${p.mg}mg`;
+                        html += `
+                            <div class="flex items-center gap-1.5 bg-white border border-gray-200 shadow-sm px-2 py-1 rounded-lg animate-fade-in">
+                                <span class="${pillClass} scale-75 origin-center"></span>
+                                <span class="text-xs font-bold text-gray-600">${text}</span>
+                            </div>
+                        `;
+                    });
+                    display.innerHTML = html;
+                }
+            }
+            
+            const badgeEl = document.getElementById('dayTotalDoseBadge');
+            if(badgeEl) badgeEl.innerText = `รวม ${dailyDose.toFixed(1)} mg`;
+        }
+
+        window.twdSetActivePill = function(mg) {
+            twdActivePillMg = mg;
+            
+            // Update pill selector buttons UI
+            [1, 2, 3, 4, 5].forEach(val => {
+                const btn = document.getElementById(`btnPill${val}`);
+                if(!btn) return;
+
+                if (val === mg) {
+                    let colorBorder, colorBg, colorText;
+                    if(val === 1) { colorBorder = 'border-gray-400'; colorBg = 'bg-gray-100'; colorText = 'text-gray-800'; }
+                    if(val === 2) { colorBorder = 'border-orange-400'; colorBg = 'bg-orange-50'; colorText = 'text-orange-800'; }
+                    if(val === 3) { colorBorder = 'border-blue-400'; colorBg = 'bg-blue-50'; colorText = 'text-blue-800'; }
+                    if(val === 4) { colorBorder = 'border-yellow-400'; colorBg = 'bg-yellow-50'; colorText = 'text-yellow-800'; }
+                    if(val === 5) { colorBorder = 'border-pink-400'; colorBg = 'bg-pink-50'; colorText = 'text-pink-800'; }
+                    
+                    btn.className = `flex-1 py-2 px-1 sm:px-3 border-2 ${colorBorder} ${colorBg} rounded-xl shadow-sm transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 font-bold ${colorText} transform scale-105 text-xs sm:text-base`;
+                } else {
+                    btn.className = `flex-1 py-2 px-1 sm:px-3 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 font-bold text-gray-700 text-xs sm:text-base`;
+                }
+            });
+
+            // Update Add buttons visual
+            const visualFull = document.getElementById('visualFullAdd');
+            const visualHalf = document.getElementById('visualHalfAdd');
+            if(visualFull) visualFull.className = `pill pill-${mg} group-hover:scale-110 transition-transform`;
+            if(visualHalf) visualHalf.className = `pill pill-${mg} pill-half-left group-hover:scale-110 transition-transform`;
+        }
+
+        window.twdAddPill = function(isHalf) {
+            twdSchedule[twdActiveDay].push({ mg: twdActivePillMg, half: isHalf });
+            twdRenderDaysGrid();
+            twdUpdateEditorUI();
+        }
+
+        window.twdUndoLastPill = function() {
+            if (twdSchedule[twdActiveDay].length > 0) {
+                twdSchedule[twdActiveDay].pop();
+                twdRenderDaysGrid();
+                twdUpdateEditorUI();
+            }
+        }
+
+        window.twdClearCurrentDay = function() {
+            twdSchedule[twdActiveDay] = [];
+            twdRenderDaysGrid();
+            twdUpdateEditorUI();
+        }
+
+        window.twdApplyToAllDays = function() {
+            const currentPills = JSON.stringify(twdSchedule[twdActiveDay]);
+            for (let i = 0; i <= 6; i++) {
+                twdSchedule[i] = JSON.parse(currentPills);
+            }
+            twdRenderDaysGrid();
+            
+            // Visual feedback
+            const btn = document.getElementById('twdApplyAllBtn');
+            if(btn) {
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> คัดลอกสำเร็จ!';
+                btn.classList.replace('bg-blue-600', 'bg-green-500');
+                btn.classList.replace('hover:bg-blue-700', 'hover:bg-green-600');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.classList.replace('bg-green-500', 'bg-blue-600');
+                    btn.classList.replace('hover:bg-green-600', 'hover:bg-blue-700');
+                }, 1500);
+            }
+        }
+
+        window.twdUpdateTotal = function() {
+            let total = 0;
+            for (let i = 0; i <= 6; i++) {
+                twdSchedule[i].forEach(p => {
+                    total += p.half ? p.mg * 0.5 : p.mg;
+                });
+            }
+            // Fix floating point issue
+            total = Math.round(total * 100) / 100;
+            const totalEl = document.getElementById('totalWeeklyDose');
+            if(totalEl) totalEl.innerText = total.toFixed(1);
+        }
+
+        window.twdPromptReset = function() {
+            const modal = document.getElementById('twdConfirmModal');
+            const modalContent = document.getElementById('twdConfirmModalContent');
+            if(!modal || !modalContent) return;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Allow display:flex to apply before setting opacity for transition
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95');
+                modalContent.classList.add('scale-100');
+            }, 10);
+        }
+
+        window.twdCloseConfirmModal = function() {
+            const modal = document.getElementById('twdConfirmModal');
+            const modalContent = document.getElementById('twdConfirmModalContent');
+            if(!modal || !modalContent) return;
+            
+            modal.classList.add('opacity-0');
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 200); // match standard transition time
+        }
+
+        window.twdPerformReset = function() {
+            twdSchedule = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+            twdActiveDay = 1;
+            twdRenderDaysGrid();
+            twdUpdateEditorUI();
+            twdCloseConfirmModal();
         }
     </script>
 </body>
